@@ -14,6 +14,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly IDirectoryService _directoryService;
         private readonly IComparisonService _comparisonService;
         private readonly IExportService _exportService;
+        private MainWindow? _mainWindow;
 
         [ObservableProperty]
         private string newDirectoryPath = string.Empty;
@@ -29,6 +30,15 @@ namespace ReleaseTrackerWpf.ViewModels
 
         [ObservableProperty]
         private bool isProcessing = false;
+
+        partial void OnIsProcessingChanged(bool value)
+        {
+            // デバッグ用：IsProcessingの変更をログ出力
+            System.Diagnostics.Debug.WriteLine($"IsProcessing changed: {value}, StatusMessage: '{StatusMessage}'");
+        }
+
+        [ObservableProperty]
+        private bool hasStatusMessage = false;
 
         [ObservableProperty]
         private DirectorySnapshot? newSnapshot;
@@ -64,6 +74,15 @@ namespace ReleaseTrackerWpf.ViewModels
             SetupAutoScanTimer();
         }
 
+        /// <summary>
+        /// MainWindowの参照を設定します
+        /// </summary>
+        /// <param name="mainWindow">MainWindowのインスタンス</param>
+        public void SetMainWindow(MainWindow mainWindow)
+        {
+            _mainWindow = mainWindow;
+        }
+
         partial void OnNewDirectoryPathChanged(string value)
         {
             if (AutoScanEnabled && !string.IsNullOrEmpty(value) && Directory.Exists(value))
@@ -71,6 +90,15 @@ namespace ReleaseTrackerWpf.ViewModels
                 RestartAutoScanTimer();
             }
         }
+
+        partial void OnStatusMessageChanged(string value)
+        {
+            HasStatusMessage = !string.IsNullOrEmpty(value);
+            
+            // デバッグ用：StatusMessageの変更をログ出力
+            System.Diagnostics.Debug.WriteLine($"StatusMessage changed: '{value}', IsProcessing: {IsProcessing}");
+        }
+
 
         private void SetupAutoScanTimer()
         {
@@ -139,6 +167,13 @@ namespace ReleaseTrackerWpf.ViewModels
             {
                 IsProcessing = true;
                 StatusMessage = "スナップショットを作成中...";
+                
+                // プログレス付きSnackbarを表示
+                if (_mainWindow != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Showing progress snackbar: スナップショットを作成中...");
+                    _mainWindow.ShowProgressSnackbar("処理中", "スナップショットを作成中...", 0);
+                }
 
                 var snapshot = await _directoryService.ScanDirectoryAsync(directoryPath);
                 var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
@@ -146,10 +181,17 @@ namespace ReleaseTrackerWpf.ViewModels
 
                 await _directoryService.SaveSnapshotAsync(snapshot, filePath);
 
-                Application.Current.Dispatcher.Invoke(async () =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    await LoadAvailableSnapshotsAsync();
+                    _ = LoadAvailableSnapshotsAsync();
                     StatusMessage = "スナップショットを作成しました";
+                    
+                    // 完了Snackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Showing completion snackbar: スナップショットを作成しました");
+                        _mainWindow.ShowSnackbar("通知", "スナップショットを作成しました", 0);
+                    }
                 });
             }
             catch (Exception ex)
@@ -158,12 +200,19 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                     StatusMessage = "エラーが発生しました";
+                    
+                    // エラーSnackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowSnackbar("エラー", "エラーが発生しました", 0);
+                    }
                 });
             }
             finally
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
+                    System.Diagnostics.Debug.WriteLine("Setting IsProcessing = false in ScanAndSaveSnapshotAsync finally block");
                     IsProcessing = false;
                 });
             }
@@ -185,6 +234,15 @@ namespace ReleaseTrackerWpf.ViewModels
                     {
                         IsProcessing = true;
                         StatusMessage = "初回スキャン中...";
+                        
+                        // プログレス付きSnackbarを表示
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (_mainWindow != null)
+                            {
+                                _mainWindow.ShowProgressSnackbar("処理中", "初回スキャン中...", 0);
+                            }
+                        });
 
                         var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
                         var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
@@ -192,10 +250,16 @@ namespace ReleaseTrackerWpf.ViewModels
 
                         await _directoryService.SaveSnapshotAsync(snapshot, filePath);
 
-                        Application.Current.Dispatcher.Invoke(async () =>
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
-                            await LoadAvailableSnapshotsAsync();
+                            _ = LoadAvailableSnapshotsAsync();
                             StatusMessage = "初回スナップショットを作成しました";
+                            
+                            // 完了Snackbarを表示
+                            if (_mainWindow != null)
+                            {
+                                _mainWindow.ShowSnackbar("通知", "初回スナップショットを作成しました", 0);
+                            }
                         });
                     }
                     catch (Exception ex)
@@ -204,11 +268,20 @@ namespace ReleaseTrackerWpf.ViewModels
                         {
                             MessageBox.Show($"初回スキャン中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                             StatusMessage = "エラーが発生しました";
+                            
+                            // エラーSnackbarを表示
+                            if (_mainWindow != null)
+                            {
+                                _mainWindow.ShowSnackbar("エラー", "エラーが発生しました", 0);
+                            }
                         });
                     }
                     finally
                     {
-                        IsProcessing = false;
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            IsProcessing = false;
+                        });
                     }
                 });
             }
@@ -225,6 +298,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     IsProcessing = true;
                     StatusMessage = "新構造をスキャン中...";
+                    
+                    // プログレス付きSnackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowProgressSnackbar("処理中", "新構造をスキャン中...", 0);
+                    }
                 });
 
                 NewSnapshot = await _directoryService.ScanDirectoryAsync(NewDirectoryPath);
@@ -232,6 +311,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     StatusMessage = "新構造のスキャンが完了しました";
+                    
+                    // 完了Snackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowSnackbar("通知", "新構造のスキャンが完了しました", 0);
+                    }
                 });
             }
             catch (Exception ex)
@@ -240,6 +325,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     MessageBox.Show($"新構造のスキャン中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                     StatusMessage = "エラーが発生しました";
+                    
+                    // エラーSnackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowSnackbar("エラー", "エラーが発生しました", 0);
+                    }
                 });
             }
             finally
@@ -262,6 +353,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     IsProcessing = true;
                     StatusMessage = "比較処理中...";
+                    
+                    // プログレス付きSnackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowProgressSnackbar("処理中", "比較処理中...", 0);
+                    }
                 });
 
                 await Task.Run(() =>
@@ -279,6 +376,12 @@ namespace ReleaseTrackerWpf.ViewModels
                             ComparisonResults.Add(FileItemViewModel.FromModel(item));
                         }
                         StatusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
+                        
+                        // 完了Snackbarを表示
+                        if (_mainWindow != null)
+                        {
+                            _mainWindow.ShowSnackbar("通知", StatusMessage, 0);
+                        }
                     }
                 });
 
@@ -291,10 +394,10 @@ namespace ReleaseTrackerWpf.ViewModels
                         var filePath = Path.Combine(SnapshotsDirectory, fileName);
                         await _directoryService.SaveSnapshotAsync(NewSnapshot, filePath);
 
-                        Application.Current.Dispatcher.Invoke(async () =>
+                        // 自動保存の場合は新しいスナップショットのみを追加（UIスレッドで実行）
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
-                            // 自動保存の場合は新しいスナップショットのみを追加
-                            await AddNewSnapshotToListAsync(NewSnapshot);
+                            AddNewSnapshotToListAsync(NewSnapshot);
                         });
                     }
                     catch
@@ -309,6 +412,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     MessageBox.Show($"比較処理中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                     StatusMessage = "エラーが発生しました";
+                    
+                    // エラーSnackbarを表示
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.ShowSnackbar("エラー", "エラーが発生しました", 0);
+                    }
                 });
             }
             finally
