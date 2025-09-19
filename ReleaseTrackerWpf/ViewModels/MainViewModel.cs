@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
+using ReleaseTrackerWpf.Views;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 
 namespace ReleaseTrackerWpf.ViewModels
@@ -39,11 +41,23 @@ namespace ReleaseTrackerWpf.ViewModels
         [ObservableProperty]
         private bool autoScanEnabled = false;
 
+        [ObservableProperty]
+        private int addedCount;
+
+        [ObservableProperty]
+        private int deletedCount;
+
+        [ObservableProperty]
+        private int modifiedCount;
+
         public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
         public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = new();
+        public ObservableCollection<ComparisonTreeItem> OldStructureTree { get; } = new();
+        public ObservableCollection<ComparisonTreeItem> NewStructureTree { get; } = new();
 
         public bool HasSnapshots => AvailableSnapshots.Count > 0;
         public bool HasNoSnapshots => AvailableSnapshots.Count == 0;
+        public bool HasComparisonResults => _lastComparisonResult != null;
 
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
@@ -272,13 +286,27 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     ComparisonResults.Clear();
+                    OldStructureTree.Clear();
+                    NewStructureTree.Clear();
+
                     if (_lastComparisonResult != null)
                     {
                         foreach (var item in _lastComparisonResult.AllDifferences)
                         {
                             ComparisonResults.Add(FileItemViewModel.FromModel(item));
                         }
-                        StatusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
+
+                        // 左右のツリー構造を構築
+                        BuildOldStructureTree(SelectedOldSnapshot.Items, _lastComparisonResult);
+                        BuildNewStructureTree(SelectedNewSnapshot.Items, _lastComparisonResult);
+
+                        // 統計情報を更新
+                        AddedCount = _lastComparisonResult.AddedItems.Count;
+                        DeletedCount = _lastComparisonResult.DeletedItems.Count;
+                        ModifiedCount = _lastComparisonResult.ModifiedItems.Count;
+
+                        StatusMessage = $"比較完了: 追加 {AddedCount}, 削除 {DeletedCount}, 変更 {ModifiedCount}";
+                        OnPropertyChanged(nameof(HasComparisonResults));
                     }
                 });
 
@@ -371,6 +399,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 }
             }
         }
+
 
         [RelayCommand]
         private async Task ImportDescriptionsAsync()
@@ -537,6 +566,147 @@ namespace ReleaseTrackerWpf.ViewModels
 
             // Reload snapshots from new directory
             _ = LoadAvailableSnapshotsAsync();
+        }
+
+        private void BuildOldStructureTree(List<FileItem> rootItems, ComparisonResult comparisonResult)
+        {
+            OldStructureTree.Clear();
+
+            var deletedPaths = comparisonResult.DeletedItems.Select(f => f.RelativePath).ToHashSet();
+            foreach (var item in rootItems)
+            {
+                BuildStructureTreeRecursive(item, OldStructureTree, deletedPaths, DifferenceType.Deleted);
+            }
+        }
+
+        private void BuildNewStructureTree(List<FileItem> rootItems, ComparisonResult comparisonResult)
+        {
+            NewStructureTree.Clear();
+
+            var addedPaths = comparisonResult.AddedItems.Select(f => f.RelativePath).ToHashSet();
+            var modifiedPaths = comparisonResult.ModifiedItems.Select(f => f.RelativePath).ToHashSet();
+
+            foreach (var item in rootItems)
+            {
+                BuildNewStructureTreeRecursive(item, NewStructureTree, addedPaths, modifiedPaths);
+            }
+        }
+
+        private void BuildNewStructureTreeRecursive(FileItem item, ObservableCollection<ComparisonTreeItem> collection, HashSet<string> addedPaths, HashSet<string> modifiedPaths)
+        {
+            var treeItem = new ComparisonTreeItem
+            {
+                Name = item.Name,
+                FullPath = item.FullPath,
+                IsDirectory = item.IsDirectory,
+                Size = item.Size
+            };
+
+            // 追加・変更されたファイルかどうかをチェック
+            if (addedPaths.Contains(item.RelativePath))
+            {
+                treeItem.DifferenceType = DifferenceType.Added;
+            }
+            else if (modifiedPaths.Contains(item.RelativePath))
+            {
+                treeItem.DifferenceType = DifferenceType.Modified;
+            }
+
+            // 子アイテムを再帰的に処理
+            foreach (var child in item.Children)
+            {
+                BuildNewStructureTreeRecursive(child, treeItem.Children, addedPaths, modifiedPaths);
+            }
+
+            // すべてのアイテムを常に表示
+            collection.Add(treeItem);
+        }
+
+        private void BuildStructureTreeRecursive(FileItem item, ObservableCollection<ComparisonTreeItem> collection, HashSet<string> changedPaths, DifferenceType differenceType)
+        {
+            var treeItem = new ComparisonTreeItem
+            {
+                Name = item.Name,
+                FullPath = item.FullPath,
+                IsDirectory = item.IsDirectory,
+                Size = item.Size
+            };
+
+            // 差分タイプをチェック
+            if (changedPaths.Contains(item.RelativePath))
+            {
+                treeItem.DifferenceType = differenceType;
+            }
+
+            // 子アイテムを再帰的に処理
+            foreach (var child in item.Children)
+            {
+                BuildStructureTreeRecursive(child, treeItem.Children, changedPaths, differenceType);
+            }
+
+            // すべてのアイテムを常に表示
+            collection.Add(treeItem);
+        }
+
+        private void BuildTreeWithFilter(FileItem item, ObservableCollection<ComparisonTreeItem> collection, HashSet<string> targetPaths, bool isOldStructure)
+        {
+            var treeItem = new ComparisonTreeItem
+            {
+                Name = item.Name,
+                FullPath = item.FullPath,
+                IsDirectory = item.IsDirectory,
+                Size = item.Size
+            };
+
+            // このアイテムまたはその子が対象パスに含まれているかチェック
+            bool hasTargetChildren = false;
+            bool isTarget = targetPaths.Contains(item.RelativePath);
+
+            // 子アイテムを再帰的に処理
+            foreach (var child in item.Children)
+            {
+                var childHasTarget = HasTargetInSubtree(child, targetPaths);
+                if (childHasTarget || targetPaths.Contains(child.RelativePath))
+                {
+                    BuildTreeWithFilter(child, treeItem.Children, targetPaths, isOldStructure);
+                    hasTargetChildren = true;
+                }
+            }
+
+            // このアイテム自体が対象か、対象となる子を持つ場合のみ表示
+            if (isTarget || hasTargetChildren)
+            {
+                // 差分タイプを設定
+                if (isTarget)
+                {
+                    if (isOldStructure)
+                    {
+                        treeItem.DifferenceType = DifferenceType.Deleted;
+                    }
+                    else
+                    {
+                        // 新構造の場合、追加か変更かを区別
+                        if (_lastComparisonResult?.AddedItems.Any(a => a.RelativePath == item.RelativePath) == true)
+                        {
+                            treeItem.DifferenceType = DifferenceType.Added;
+                        }
+                        else if (_lastComparisonResult?.ModifiedItems.Any(m => m.RelativePath == item.RelativePath) == true)
+                        {
+                            treeItem.DifferenceType = DifferenceType.Modified;
+                        }
+                    }
+                }
+
+                collection.Add(treeItem);
+            }
+        }
+
+        private bool HasTargetInSubtree(FileItem item, HashSet<string> targetPaths)
+        {
+            if (targetPaths.Contains(item.RelativePath))
+                return true;
+
+            return item.Children.Any(child => HasTargetInSubtree(child, targetPaths));
         }
     }
 }

@@ -1,35 +1,21 @@
-using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Collections.ObjectModel;
 
 namespace ReleaseTrackerWpf.Models
 {
-    public class FileItem
+    public class ComparisonTreeItem
     {
         public string Name { get; set; } = string.Empty;
         public string FullPath { get; set; } = string.Empty;
-        public string RelativePath { get; set; } = string.Empty;
         public bool IsDirectory { get; set; }
         public long Size { get; set; }
-        public DateTime LastWriteTime { get; set; }
-        public List<FileItem> Children { get; set; } = new List<FileItem>();
-
-        [JsonIgnore]
         public DifferenceType DifferenceType { get; set; } = DifferenceType.None;
+        public ObservableCollection<ComparisonTreeItem> Children { get; set; } = new ObservableCollection<ComparisonTreeItem>();
 
-        [JsonIgnore]
-        public string? Description { get; set; }
-
-        [JsonIgnore]
         public bool IsAdded => DifferenceType == DifferenceType.Added;
-
-        [JsonIgnore]
         public bool IsDeleted => DifferenceType == DifferenceType.Deleted;
-
-        [JsonIgnore]
         public bool IsModified => DifferenceType == DifferenceType.Modified;
 
-        [JsonIgnore]
         public string DisplaySize
         {
             get
@@ -41,6 +27,25 @@ namespace ReleaseTrackerWpf.Models
                 if (Size < 1024 * 1024 * 1024) return $"{Size / (1024 * 1024):F1} MB";
                 return $"{Size / (1024 * 1024 * 1024):F1} GB";
             }
+        }
+
+        public static ComparisonTreeItem CreateFromFileItem(FileItem fileItem)
+        {
+            var treeItem = new ComparisonTreeItem
+            {
+                Name = fileItem.Name,
+                FullPath = fileItem.FullPath,
+                IsDirectory = fileItem.IsDirectory,
+                Size = fileItem.Size,
+                DifferenceType = fileItem.DifferenceType
+            };
+
+            foreach (var child in fileItem.Children)
+            {
+                treeItem.Children.Add(CreateFromFileItem(child));
+            }
+
+            return treeItem;
         }
     }
 }
