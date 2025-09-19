@@ -9,7 +9,11 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="Themes/DesertTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <!-- アプリケーション全体の背景色を設定 -->
+            <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#FFFAEF" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

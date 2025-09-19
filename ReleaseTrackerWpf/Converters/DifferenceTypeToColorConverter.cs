@@ -14,10 +14,10 @@ namespace ReleaseTrackerWpf.Converters
             {
                 return differenceType switch
                 {
-                    DifferenceType.Added => new SolidColorBrush(Color.FromRgb(0, 120, 0)),      // Darker green
-                    DifferenceType.Deleted => new SolidColorBrush(Color.FromRgb(180, 0, 0)),    // Darker red
-                    DifferenceType.Modified => new SolidColorBrush(Color.FromRgb(200, 100, 0)), // Darker orange
-                    _ => new SolidColorBrush(Colors.Black)
+                    DifferenceType.Added => new SolidColorBrush(Color.FromRgb(45, 125, 50)),     // Desert theme green (#2D7D32)
+                    DifferenceType.Deleted => new SolidColorBrush(Color.FromRgb(211, 47, 47)),  // Desert theme red (#D32F2F)
+                    DifferenceType.Modified => new SolidColorBrush(Color.FromRgb(245, 124, 0)), // Desert theme orange (#F57C00)
+                    _ => new SolidColorBrush(Color.FromRgb(61, 61, 61))                         // Desert theme text color (#3D3D3D)
                 };
             }
 

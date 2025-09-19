@@ -18,7 +18,7 @@
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </ui:FluentWindow.Resources>
 
-    <Grid>
+    <Grid Background="{StaticResource ApplicationBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -26,10 +26,15 @@
         </Grid.RowDefinitions>
 
         <!-- Title Bar -->
-        <ui:TitleBar Grid.Row="0" Title="ReleaseTracker"/>
+        <ui:TitleBar Grid.Row="0" Title="ReleaseTracker" Height="28" Background="{StaticResource TitleBarBackgroundBrush}"
+                     FontWeight="Bold" FontSize="14">
+            <ui:TitleBar.Icon>
+                <ui:SymbolIcon Symbol="Home16" FontSize="18"/>
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
 
         <!-- Tab Control -->
-        <TabControl Grid.Row="1" Margin="10">
+        <TabControl Grid.Row="1" Margin="10" Background="{StaticResource ApplicationBackgroundBrush}">
             <!-- Main Tab -->
             <TabItem Header="メイン">
                 <Grid Margin="10">
@@ -202,7 +207,7 @@
                                     <TextBlock Text="スナップショット保存先: " VerticalAlignment="Center"/>
                                     <Grid Margin="5,0,0,0">
                                         <TextBox Text="{Binding SnapshotsDirectory}"
-                                                Width="400"
+                                                Width="600"
                                                 IsReadOnly="True"
                                                 Padding="8,8,40,8"/>
                                         <ui:Button Click="ChangeSnapshotsFolder_Click"
@@ -240,17 +245,21 @@
         </TabControl>
 
         <!-- Status Bar -->
-        <ui:InfoBar Grid.Row="2"
-                    Title="{Binding StatusMessage}"
-                    IsOpen="True"
-                    Severity="Informational"
-                    IsClosable="False"
-                    Margin="10,0,10,10">
-            <ui:InfoBar.Content>
-                <ui:ProgressRing IsIndeterminate="True"
-                                 Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                 Width="16" Height="16"/>
-            </ui:InfoBar.Content>
-        </ui:InfoBar>
+        <Border Grid.Row="2"
+                Background="{StaticResource StatusBarBackgroundBrush}"
+                Margin="10,0,10,10"
+                CornerRadius="4">
+            <ui:InfoBar Title="{Binding StatusMessage}"
+                        IsOpen="True"
+                        Severity="Informational"
+                        IsClosable="False"
+                        Background="Transparent">
+                <ui:InfoBar.Content>
+                    <ui:ProgressRing IsIndeterminate="True"
+                                     Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     Width="16" Height="16"/>
+                </ui:InfoBar.Content>
+            </ui:InfoBar>
+        </Border>
     </Grid>
 </ui:FluentWindow>
