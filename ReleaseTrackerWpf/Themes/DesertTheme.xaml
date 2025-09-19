@@ -43,6 +43,13 @@
     <Color x:Key="StatusBarBackgroundColor">#E8E0C8</Color>
     <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="{StaticResource StatusBarBackgroundColor}" />
 
+    <!--  Tab header color (lighter than background for unselected tabs)  -->
+    <Color x:Key="TabHeaderBackgroundColor">#F8F4E8</Color>
+    <SolidColorBrush x:Key="TabHeaderBackgroundBrush" Color="{StaticResource TabHeaderBackgroundColor}" />
+
+    <!--  Selected tab color (medium tone between title bar and status bar)  -->
+    <Color x:Key="TabHeaderSelectedBackgroundColor">#EEE8D2</Color>
+
     <Color x:Key="KeyboardFocusBorderColor">#3D3D3D</Color>
     <!--  Same as SystemColorWindowTextColor  -->
     <SolidColorBrush x:Key="KeyboardFocusBorderColorBrush" Color="{StaticResource KeyboardFocusBorderColor}" />
@@ -182,5 +189,11 @@
     <Color x:Key="SystemFillColorNeutralBackground">#F5F5F5</Color>
     <Color x:Key="SystemFillColorSolidAttentionBackground">#FFF3E0</Color>
     <Color x:Key="SystemFillColorSolidNeutralBackground">#F5F5F5</Color>
+
+    <!--  Tab Control specific brushes  -->
+    <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="{StaticResource TabHeaderBackgroundColor}" />
+    <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="{StaticResource StatusBarBackgroundColor}" />
+    <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="{StaticResource StatusBarBackgroundColor}" />
+    <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{StaticResource TabHeaderSelectedBackgroundColor}" />
 
 </ResourceDictionary>
