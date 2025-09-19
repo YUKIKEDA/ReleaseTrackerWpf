@@ -11,6 +11,8 @@ namespace ReleaseTrackerWpf
 {
     public partial class MainWindow : FluentWindow
     {
+        private Snackbar? _currentSnackbar;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -81,7 +83,16 @@ namespace ReleaseTrackerWpf
                 return;
             }
             
-            var snackbar = new Snackbar(SnackbarPresenter)
+            // 既存のSnackbarがある場合は閉じてから新しいSnackbarを作成
+            if (_currentSnackbar != null)
+            {
+                System.Diagnostics.Debug.WriteLine("Replacing existing snackbar with new one");
+                // 既存のSnackbarをクリア
+                _currentSnackbar = null;
+            }
+            
+            System.Diagnostics.Debug.WriteLine("Creating new snackbar");
+            _currentSnackbar = new Snackbar(SnackbarPresenter)
             {
                 Title = title,
                 Content = message,
@@ -91,12 +102,11 @@ namespace ReleaseTrackerWpf
             // timeoutSecondsが0でない場合のみTimeoutを設定
             if (timeoutSeconds > 0)
             {
-                snackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+                _currentSnackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
             }
-            // timeoutSecondsが0の場合はデフォルト値を使用（Timeoutを設定しない）
 
             System.Diagnostics.Debug.WriteLine($"Snackbar created, calling Show()");
-            snackbar.Show();
+            _currentSnackbar.Show();
             System.Diagnostics.Debug.WriteLine($"Snackbar.Show() completed");
         }
 
@@ -130,7 +140,16 @@ namespace ReleaseTrackerWpf
                 progressPanel.Children.Add(progressRing);
                 progressPanel.Children.Add(new System.Windows.Controls.TextBlock { Text = message });
 
-                var snackbar = new Snackbar(SnackbarPresenter)
+                // 既存のSnackbarがある場合は閉じてから新しいSnackbarを作成
+                if (_currentSnackbar != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Replacing existing snackbar with new progress snackbar");
+                    // 既存のSnackbarをクリア
+                    _currentSnackbar = null;
+                }
+                
+                System.Diagnostics.Debug.WriteLine("Creating new progress snackbar");
+                _currentSnackbar = new Snackbar(SnackbarPresenter)
                 {
                     Title = title,
                     Content = progressPanel,
@@ -140,12 +159,11 @@ namespace ReleaseTrackerWpf
                 // timeoutSecondsが0でない場合のみTimeoutを設定
                 if (timeoutSeconds > 0)
                 {
-                    snackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+                    _currentSnackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
                 }
-                // timeoutSecondsが0の場合はデフォルト値を使用（Timeoutを設定しない）
 
                 System.Diagnostics.Debug.WriteLine($"ProgressSnackbar created, calling Show()");
-                snackbar.Show();
+                _currentSnackbar.Show();
                 System.Diagnostics.Debug.WriteLine($"ProgressSnackbar.Show() completed");
             }
             catch (Exception ex)
@@ -153,6 +171,18 @@ namespace ReleaseTrackerWpf
                 System.Diagnostics.Debug.WriteLine($"ProgressSnackbar failed: {ex.Message}");
                 // ProgressRingでエラーが発生した場合は通常のSnackbarにフォールバック
                 ShowSnackbar(title, $"🔄 {message}", timeoutSeconds);
+            }
+        }
+
+        /// <summary>
+        /// 現在のSnackbarの参照をクリアします
+        /// </summary>
+        public void ClearSnackbar()
+        {
+            if (_currentSnackbar != null)
+            {
+                System.Diagnostics.Debug.WriteLine("Clearing current snackbar reference");
+                _currentSnackbar = null;
             }
         }
 

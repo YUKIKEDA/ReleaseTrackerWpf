@@ -186,11 +186,11 @@ namespace ReleaseTrackerWpf.ViewModels
                     _ = LoadAvailableSnapshotsAsync();
                     StatusMessage = "スナップショットを作成しました";
                     
-                    // 完了Snackbarを表示
+                    // 完了Snackbarを表示（24時間表示）
                     if (_mainWindow != null)
                     {
                         System.Diagnostics.Debug.WriteLine("Showing completion snackbar: スナップショットを作成しました");
-                        _mainWindow.ShowSnackbar("通知", "スナップショットを作成しました", 0);
+                        _mainWindow.ShowSnackbar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
                     }
                 });
             }
@@ -255,10 +255,10 @@ namespace ReleaseTrackerWpf.ViewModels
                             _ = LoadAvailableSnapshotsAsync();
                             StatusMessage = "初回スナップショットを作成しました";
                             
-                            // 完了Snackbarを表示
+                            // 完了Snackbarを表示（24時間表示）
                             if (_mainWindow != null)
                             {
-                                _mainWindow.ShowSnackbar("通知", "初回スナップショットを作成しました", 0);
+                                _mainWindow.ShowSnackbar("通知", "初回スナップショットを作成しました", 86400); // 24時間 = 86400秒
                             }
                         });
                     }
@@ -312,10 +312,10 @@ namespace ReleaseTrackerWpf.ViewModels
                 {
                     StatusMessage = "新構造のスキャンが完了しました";
                     
-                    // 完了Snackbarを表示
+                    // 完了Snackbarを表示（24時間表示）
                     if (_mainWindow != null)
                     {
-                        _mainWindow.ShowSnackbar("通知", "新構造のスキャンが完了しました", 0);
+                        _mainWindow.ShowSnackbar("通知", "新構造のスキャンが完了しました", 86400); // 24時間 = 86400秒
                     }
                 });
             }
@@ -377,10 +377,10 @@ namespace ReleaseTrackerWpf.ViewModels
                         }
                         StatusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
                         
-                        // 完了Snackbarを表示
+                        // 完了Snackbarを表示（24時間表示）
                         if (_mainWindow != null)
                         {
-                            _mainWindow.ShowSnackbar("通知", StatusMessage, 0);
+                            _mainWindow.ShowSnackbar("通知", StatusMessage, 86400); // 24時間 = 86400秒
                         }
                     }
                 });
