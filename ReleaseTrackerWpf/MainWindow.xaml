@@ -51,14 +51,23 @@
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
+                    <!--  Snapshot Add Button (Above Grid)  -->
+                    <ui:Button
+                        Grid.Row="0"
+                        Margin="0,0,0,10"
+                        HorizontalAlignment="Right"
+                        Command="{Binding ScanAndAddNewStructureCommand}"
+                        Content="スナップショット追加"
+                        Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
                     <!--  Control Panel  -->
-                    <ui:Card Grid.Row="0" Margin="0,0,0,10">
+                    <ui:Card Grid.Row="1" Margin="0,0,0,10">
                         <Grid Margin="0">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
@@ -69,28 +78,9 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!--  Snapshot Add Button (Top Right)  -->
-                            <ui:Button
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                Margin="0,0,0,10"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                Command="{Binding ScanAndAddNewStructureCommand}"
-                                Content="スナップショット追加"
-                                Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                            <!--  Divider  -->
-                            <Separator
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Grid.ColumnSpan="2"
-                                Margin="0,0,0,10"
-                                Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
                             <!--  Headers  -->
                             <TextBlock
-                                Grid.Row="2"
+                                Grid.Row="0"
                                 Grid.Column="0"
                                 Margin="0,0,0,10"
                                 FontSize="16"
@@ -98,7 +88,7 @@
                                 Text="比較元"
                                 Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             <TextBlock
-                                Grid.Row="2"
+                                Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="0,0,0,10"
                                 FontSize="16"
@@ -108,7 +98,7 @@
 
                             <!--  Old Structure Selection  -->
                             <StackPanel
-                                Grid.Row="3"
+                                Grid.Row="1"
                                 Grid.Column="0"
                                 Margin="0,0,10,0">
                                 <ComboBox
@@ -132,7 +122,7 @@
 
                             <!--  New Structure Selection  -->
                             <StackPanel
-                                Grid.Row="3"
+                                Grid.Row="1"
                                 Grid.Column="1"
                                 Margin="10,0,0,0">
                                 <ComboBox
@@ -181,7 +171,7 @@
                     </ui:Card>
 
                     <!--  Results Area  -->
-                    <ui:Card Grid.Row="1" VerticalAlignment="Top">
+                    <ui:Card Grid.Row="2" VerticalAlignment="Top">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
