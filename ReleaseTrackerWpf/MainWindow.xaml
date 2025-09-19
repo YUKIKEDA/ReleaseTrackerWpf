@@ -81,23 +81,25 @@
                                           Visibility="{Binding HasNoSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </StackPanel>
 
-                            <!-- New Structure Controls -->
+                            <!-- New Structure Selection -->
                             <StackPanel Grid.Row="1" Grid.Column="1" Margin="10,0,0,0">
-                                <Grid Margin="0,0,0,10">
-                                    <ui:TextBox Text="{Binding NewDirectoryPath}"
-                                               PlaceholderText="フォルダパス（自動スキャン）"
-                                               Padding="8,8,40,8"/>
-                                    <ui:Button Command="{Binding BrowseNewDirectoryCommand}"
-                                              HorizontalAlignment="Right"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,8,0"
-                                              Width="24" Height="24"
-                                              Padding="0"
-                                              Background="Transparent"
-                                              BorderThickness="0">
-                                        <ui:SymbolIcon Symbol="FolderOpen16" FontSize="14"/>
-                                    </ui:Button>
-                                </Grid>
+                                <ComboBox ItemsSource="{Binding AvailableSnapshots}"
+                                          SelectedItem="{Binding SelectedNewSnapshot}"
+                                          Margin="0,0,0,10"
+                                          Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding RootPath}" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding CreatedAt, StringFormat='作成日時: {0:yyyy/MM/dd HH:mm}'}"
+                                                          FontSize="11" Foreground="Gray"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <ui:Button Content="新構造をスキャンして追加"
+                                          Command="{Binding ScanAndAddNewStructureCommand}"
+                                          Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </StackPanel>
 
                         </Grid>
@@ -228,6 +230,18 @@
                                           Click="OpenSnapshotsFolder_Click"
                                           Margin="0,5,0,0"
                                           HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Snapshot Management -->
+                        <GroupBox Header="スナップショット管理" Margin="0,0,0,15">
+                            <StackPanel Margin="10">
+                                <ui:Button Content="新しいスナップショットを作成"
+                                          Command="{Binding CreateNewSnapshotCommand}"
+                                          Margin="0,0,0,10"/>
+                                
+                                <TextBlock Text="※ フォルダを選択して新しいスナップショットを作成できます"
+                                          FontSize="11" Foreground="Gray"/>
                             </StackPanel>
                         </GroupBox>
 

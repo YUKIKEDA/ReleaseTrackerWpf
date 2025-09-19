@@ -22,6 +22,9 @@ namespace ReleaseTrackerWpf.ViewModels
         private DirectorySnapshot? selectedOldSnapshot;
 
         [ObservableProperty]
+        private DirectorySnapshot? selectedNewSnapshot;
+
+        [ObservableProperty]
         private string statusMessage = "準備完了";
 
         [ObservableProperty]
@@ -34,7 +37,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private string snapshotsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots");
 
         [ObservableProperty]
-        private bool autoScanEnabled = true;
+        private bool autoScanEnabled = false;
 
         public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
         public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = new();
@@ -55,7 +58,7 @@ namespace ReleaseTrackerWpf.ViewModels
             Directory.CreateDirectory(SnapshotsDirectory);
 
             // Load available snapshots
-            LoadAvailableSnapshots();
+            _ = LoadAvailableSnapshotsAsync();
 
             // Setup auto-scan timer
             SetupAutoScanTimer();
@@ -103,6 +106,70 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
+        private async Task ScanAndAddNewStructure()
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "新構造のフォルダを選択してスナップショットに追加"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await ScanAndSaveSnapshotAsync(dialog.FolderName);
+            }
+        }
+
+        [RelayCommand]
+        private async Task CreateNewSnapshot()
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "スナップショットを作成するフォルダを選択"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await ScanAndSaveSnapshotAsync(dialog.FolderName);
+            }
+        }
+
+        private async Task ScanAndSaveSnapshotAsync(string directoryPath)
+        {
+            try
+            {
+                IsProcessing = true;
+                StatusMessage = "スナップショットを作成中...";
+
+                var snapshot = await _directoryService.ScanDirectoryAsync(directoryPath);
+                var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                var filePath = Path.Combine(SnapshotsDirectory, fileName);
+
+                await _directoryService.SaveSnapshotAsync(snapshot, filePath);
+
+                Application.Current.Dispatcher.Invoke(async () =>
+                {
+                    await LoadAvailableSnapshotsAsync();
+                    StatusMessage = "スナップショットを作成しました";
+                });
+            }
+            catch (Exception ex)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                    StatusMessage = "エラーが発生しました";
+                });
+            }
+            finally
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    IsProcessing = false;
+                });
+            }
+        }
+
+        [RelayCommand]
         private void BrowseFirstTimeDirectory()
         {
             var dialog = new OpenFolderDialog
@@ -125,9 +192,9 @@ namespace ReleaseTrackerWpf.ViewModels
 
                         await _directoryService.SaveSnapshotAsync(snapshot, filePath);
 
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(async () =>
                         {
-                            LoadAvailableSnapshots();
+                            await LoadAvailableSnapshotsAsync();
                             StatusMessage = "初回スナップショットを作成しました";
                         });
                     }
@@ -186,7 +253,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         private async Task CompareDirectoriesAsync()
         {
-            if (SelectedOldSnapshot == null || NewSnapshot == null)
+            if (SelectedOldSnapshot == null || SelectedNewSnapshot == null)
                 return;
 
             try
@@ -199,7 +266,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
                 await Task.Run(() =>
                 {
-                    _lastComparisonResult = _comparisonService.Compare(SelectedOldSnapshot, NewSnapshot);
+                    _lastComparisonResult = _comparisonService.Compare(SelectedOldSnapshot, SelectedNewSnapshot);
                 });
 
                 Application.Current.Dispatcher.Invoke(() =>
@@ -224,9 +291,10 @@ namespace ReleaseTrackerWpf.ViewModels
                         var filePath = Path.Combine(SnapshotsDirectory, fileName);
                         await _directoryService.SaveSnapshotAsync(NewSnapshot, filePath);
 
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(async () =>
                         {
-                            LoadAvailableSnapshots();
+                            // 自動保存の場合は新しいスナップショットのみを追加
+                            await AddNewSnapshotToListAsync(NewSnapshot);
                         });
                     }
                     catch
@@ -371,8 +439,29 @@ namespace ReleaseTrackerWpf.ViewModels
             }
         }
 
-        private void LoadAvailableSnapshots()
+        private async Task AddNewSnapshotToListAsync(DirectorySnapshot snapshot)
         {
+            // 重複チェック
+            var snapshotKey = $"{snapshot.RootPath}_{snapshot.CreatedAt:yyyyMMdd_HHmmss}";
+            var existingSnapshot = AvailableSnapshots.FirstOrDefault(s => 
+                $"{s.RootPath}_{s.CreatedAt:yyyyMMdd_HHmmss}" == snapshotKey);
+            
+            if (existingSnapshot == null)
+            {
+                AvailableSnapshots.Insert(0, snapshot); // 最新のものを先頭に追加
+                OnPropertyChanged(nameof(HasSnapshots));
+                OnPropertyChanged(nameof(HasNoSnapshots));
+            }
+        }
+
+        private async Task LoadAvailableSnapshotsAsync()
+        {
+            // 現在選択されているスナップショットの情報を保存
+            var currentSelection = SelectedOldSnapshot;
+            var currentSelectionKey = currentSelection != null 
+                ? $"{currentSelection.RootPath}_{currentSelection.CreatedAt:yyyyMMdd_HHmmss}" 
+                : null;
+
             AvailableSnapshots.Clear();
 
             if (!Directory.Exists(SnapshotsDirectory))
@@ -385,17 +474,40 @@ namespace ReleaseTrackerWpf.ViewModels
             var jsonFiles = Directory.GetFiles(SnapshotsDirectory, "*.json")
                 .OrderByDescending(f => File.GetCreationTime(f));
 
+            var loadedSnapshots = new HashSet<string>(); // 重複を防ぐためのセット
+            DirectorySnapshot? restoredSelection = null;
+
             foreach (var file in jsonFiles)
             {
                 try
                 {
-                    var snapshot = Task.Run(() => _directoryService.LoadSnapshotAsync(file)).Result;
-                    AvailableSnapshots.Add(snapshot);
+                    var snapshot = await _directoryService.LoadSnapshotAsync(file);
+                    
+                    // 同じパスと作成日時のスナップショットが既に読み込まれていないかチェック
+                    var snapshotKey = $"{snapshot.RootPath}_{snapshot.CreatedAt:yyyyMMdd_HHmmss}";
+                    if (!loadedSnapshots.Contains(snapshotKey))
+                    {
+                        loadedSnapshots.Add(snapshotKey);
+                        AvailableSnapshots.Add(snapshot);
+
+                        // 以前選択されていたスナップショットと同じものを復元
+                        if (currentSelectionKey != null && snapshotKey == currentSelectionKey)
+                        {
+                            restoredSelection = snapshot;
+                        }
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Skip corrupted files
+                    // Skip corrupted files and log the error
+                    System.Diagnostics.Debug.WriteLine($"Failed to load snapshot {file}: {ex.Message}");
                 }
+            }
+
+            // 選択を復元
+            if (restoredSelection != null)
+            {
+                SelectedOldSnapshot = restoredSelection;
             }
 
             OnPropertyChanged(nameof(HasSnapshots));
@@ -404,7 +516,15 @@ namespace ReleaseTrackerWpf.ViewModels
 
         partial void OnSelectedOldSnapshotChanged(DirectorySnapshot? value)
         {
-            if (value != null && NewSnapshot != null)
+            if (value != null && SelectedNewSnapshot != null)
+            {
+                _ = Task.Run(CompareDirectoriesAsync);
+            }
+        }
+
+        partial void OnSelectedNewSnapshotChanged(DirectorySnapshot? value)
+        {
+            if (value != null && SelectedOldSnapshot != null)
             {
                 _ = Task.Run(CompareDirectoriesAsync);
             }
@@ -416,7 +536,7 @@ namespace ReleaseTrackerWpf.ViewModels
             Directory.CreateDirectory(value);
 
             // Reload snapshots from new directory
-            LoadAvailableSnapshots();
+            _ = LoadAvailableSnapshotsAsync();
         }
     }
 }
