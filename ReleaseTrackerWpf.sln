@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36429.23 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReleaseTrackerWpf", "ReleaseTrackerWpf\ReleaseTrackerWpf.csproj", "{F2C832BA-F8E4-45BA-ACA2-2528FA8AF195}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F2C832BA-F8E4-45BA-ACA2-2528FA8AF195}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2C832BA-F8E4-45BA-ACA2-2528FA8AF195}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2C832BA-F8E4-45BA-ACA2-2528FA8AF195}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2C832BA-F8E4-45BA-ACA2-2528FA8AF195}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60DBC088-432B-4415-A075-09B5830A81E7}
+	EndGlobalSection
+EndGlobal
