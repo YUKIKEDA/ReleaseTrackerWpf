@@ -110,7 +110,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 var comparisonResult = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
 
                 // 比較結果を表示用データに変換
-                await UpdateDisplayedDirectoryStructuresAsync(comparisonResult);
+                CreateCompareResultForDisplay(comparisonResult);
 
                 // 完了InfoBarを表示
                 var changeCount = comparisonResult.TotalAddedCount + comparisonResult.TotalDeletedCount + comparisonResult.TotalModifiedCount;
@@ -167,7 +167,7 @@ namespace ReleaseTrackerWpf.ViewModels
         /// <summary>
         /// 比較結果を表示用のディレクトリ構造に変換します
         /// </summary>
-        private async Task UpdateDisplayedDirectoryStructuresAsync(ComparisonResult comparisonResult)
+        private void CreateCompareResultForDisplay(ComparisonResult comparisonResult)
         {
             
         }
