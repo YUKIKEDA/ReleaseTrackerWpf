@@ -52,7 +52,6 @@ namespace ReleaseTrackerWpf.ViewModels
         #endregion
 
         public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = [];
-        public DiffViewModel DiffViewModel { get; } = new();
 
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
@@ -365,7 +364,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         }
 
                         // Update DiffViewModel
-                        DiffViewModel.LoadComparison(SelectedOldSnapshot, SelectedNewSnapshot);
+                        //DiffViewModel.LoadComparison(SelectedOldSnapshot, SelectedNewSnapshot);
 
                         var statusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
 
