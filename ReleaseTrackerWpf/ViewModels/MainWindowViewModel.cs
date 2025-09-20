@@ -101,53 +101,6 @@ namespace ReleaseTrackerWpf.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void BrowseFirstTimeDirectory()
-        {
-            var dialog = new OpenFolderDialog
-            {
-                Title = "スキャンするフォルダを選択"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {                        
-                        // プログレス付きInfoBarを表示
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            ShowProgressInfoBar("処理中", "スキャン中...", 0);
-                        });
-
-                        var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
-                        var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-                        var filePath = Path.Combine(SnapshotsDirectory, fileName);
-
-                        await _directoryService.SaveSnapshotAsync(snapshot, filePath);
-
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            _ = LoadAvailableSnapshotsAsync();
-                            
-                            // 完了InfoBarを表示（24時間表示）
-                            ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            System.Windows.MessageBox.Show($"スキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                            
-                            // エラーInfoBarを表示
-                            ShowInfoBar("エラー", "エラーが発生しました", 0);
-                        });
-                    }
-                });
-            }
-        }
 
         [RelayCommand]
         private async Task ExportResultsAsync()

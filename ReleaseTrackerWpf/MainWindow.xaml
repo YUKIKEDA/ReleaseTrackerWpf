@@ -146,7 +146,7 @@
                                 <ui:Button
                                     Padding="40,20"
                                     HorizontalAlignment="Center"
-                                    Command="{Binding BrowseFirstTimeDirectoryCommand}"
+                                    Command="{Binding AddSnapshotCommand}"
                                     Content="スナップショット作成"
                                     FontSize="18"
                                     FontWeight="Bold" />
