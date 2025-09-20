@@ -52,6 +52,10 @@ namespace ReleaseTrackerWpf.ViewModels
         #endregion
 
         public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = [];
+        
+        // Union structure properties for side-by-side display
+        public ObservableCollection<FileItemViewModel> OldUnionItems { get; } = [];
+        public ObservableCollection<FileItemViewModel> NewUnionItems { get; } = [];
 
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
@@ -356,6 +360,9 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     ComparisonResults.Clear();
+                    OldUnionItems.Clear();
+                    NewUnionItems.Clear();
+                    
                     if (_lastComparisonResult != null)
                     {
                         foreach (var item in _lastComparisonResult.AllDifferences)
@@ -363,8 +370,18 @@ namespace ReleaseTrackerWpf.ViewModels
                             ComparisonResults.Add(FileItemViewModel.FromModel(item));
                         }
 
-                        // Update DiffViewModel
-                        //DiffViewModel.LoadComparison(SelectedOldSnapshot, SelectedNewSnapshot);
+                        // Create union structure for side-by-side display
+                        var (oldUnionItems, newUnionItems) = _comparisonService.CreateUnionStructure(SelectedOldSnapshot, SelectedNewSnapshot);
+                        
+                        foreach (var item in oldUnionItems)
+                        {
+                            OldUnionItems.Add(FileItemViewModel.FromModel(item));
+                        }
+                        
+                        foreach (var item in newUnionItems)
+                        {
+                            NewUnionItems.Add(FileItemViewModel.FromModel(item));
+                        }
 
                         var statusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
 

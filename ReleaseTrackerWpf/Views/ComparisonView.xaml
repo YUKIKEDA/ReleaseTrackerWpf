@@ -182,10 +182,10 @@
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,5,0"
-                    ItemsSource="{Binding SelectedOldSnapshot.Items}">
+                    ItemsSource="{Binding OldUnionItems}">
                     <TreeView.Resources>
-                        <!-- FileItem用のHierarchicalDataTemplate -->
-                        <HierarchicalDataTemplate DataType="{x:Type models:FileItem}" ItemsSource="{Binding Children}">
+                        <!-- FileItemViewModel用のHierarchicalDataTemplate -->
+                        <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
                                 <!-- フォルダ/ファイルアイコン -->
                                 <ui:SymbolIcon 
@@ -209,15 +209,29 @@
                             <Setter Property="IsExpanded" Value="True" />
                             <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Margin" Value="0,1" />
-                            <Setter Property="Background" Value="{StaticResource TreeViewItemBackground}" />
+                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
                             <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                             <Setter Property="BorderThickness" Value="0" />
                             <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource TreeViewItemBackgroundPointerOver}" />
-                                </Trigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource TreeViewItemBackgroundSelected}" />
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -237,10 +251,10 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    ItemsSource="{Binding SelectedNewSnapshot.Items}">
+                    ItemsSource="{Binding NewUnionItems}">
                     <TreeView.Resources>
-                        <!-- FileItem用のHierarchicalDataTemplate -->
-                        <HierarchicalDataTemplate DataType="{x:Type models:FileItem}" ItemsSource="{Binding Children}">
+                        <!-- FileItemViewModel用のHierarchicalDataTemplate -->
+                        <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
                                 <!-- フォルダ/ファイルアイコン -->
                                 <ui:SymbolIcon 
@@ -264,15 +278,29 @@
                             <Setter Property="IsExpanded" Value="True" />
                             <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Margin" Value="0,1" />
-                            <Setter Property="Background" Value="{StaticResource TreeViewItemBackground}" />
+                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
                             <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                             <Setter Property="BorderThickness" Value="0" />
                             <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource TreeViewItemBackgroundPointerOver}" />
-                                </Trigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource TreeViewItemBackgroundSelected}" />
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
