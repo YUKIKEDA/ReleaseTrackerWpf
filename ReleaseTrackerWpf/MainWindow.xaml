@@ -168,9 +168,14 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
                             <StackPanel
                                 Grid.Row="0"
+                                Grid.ColumnSpan="2"
                                 Margin="0,0,0,10"
                                 Orientation="Horizontal">
                                 <TextBlock
@@ -181,6 +186,10 @@
                                 <StackPanel Margin="20,0,0,0" Orientation="Horizontal">
                                     <ui:Button
                                         Margin="0,0,5,0"
+                                        Command="{Binding RefreshComparisonCommand}"
+                                        Content="スキャン実行" />
+                                    <ui:Button
+                                        Margin="5,0,5,0"
                                         Command="{Binding ExportResultsCommand}"
                                         Content="エクスポート" />
                                     <ui:Button
@@ -189,11 +198,6 @@
                                         Content="説明インポート" />
                                 </StackPanel>
                             </StackPanel>
-
-                            <views:DiffView
-                                Grid.Row="1"
-                                Margin="0"
-                                DataContext="{Binding DiffViewModel}" />
                         </Grid>
                     </ui:Card>
                 </Grid>
@@ -202,15 +206,15 @@
             <!--  Settings Tab  -->
             <TabItem Header="設定">
                 <ui:Card Margin="10" VerticalAlignment="Top">
-                    <StackPanel Margin="20">
+                    <StackPanel Margin="0">
                         <TextBlock
-                            Margin="0,0,0,20"
+                            Margin="0,0,0,10"
                             FontSize="18"
                             FontWeight="Bold"
                             Text="アプリケーション設定" />
 
                         <!--  Auto Scan Settings  -->
-                        <GroupBox Margin="0,0,0,15" Header="自動スキャン設定">
+                        <GroupBox Margin="0,0,0,10" Header="自動スキャン設定">
                             <StackPanel Margin="10">
                                 <CheckBox
                                     Margin="0,0,0,10"
@@ -225,7 +229,7 @@
                         </GroupBox>
 
                         <!--  Storage Settings  -->
-                        <GroupBox Margin="0,0,0,15" Header="保存設定">
+                        <GroupBox Margin="0,0,0,10" Header="保存設定">
                             <StackPanel Margin="10">
                                 <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
                                     <TextBlock VerticalAlignment="Center" Text="スナップショット保存先: " />
@@ -259,21 +263,6 @@
                             </StackPanel>
                         </GroupBox>
 
-                        <!--  Snapshot Management  -->
-                        <GroupBox Margin="0,0,0,15" Header="スナップショット管理">
-                            <StackPanel Margin="10">
-                                <ui:Button
-                                    Margin="0,0,0,10"
-                                    Command="{Binding CreateNewSnapshotCommand}"
-                                    Content="新しいスナップショットを作成" />
-
-                                <TextBlock
-                                    FontSize="11"
-                                    Foreground="Gray"
-                                    Text="※ フォルダを選択して新しいスナップショットを作成できます" />
-                            </StackPanel>
-                        </GroupBox>
-
                         <!--  About  -->
                         <GroupBox Header="バージョン情報">
                             <StackPanel Margin="10">
@@ -282,10 +271,6 @@
                                     FontWeight="Bold"
                                     Text="ReleaseTracker" />
                                 <TextBlock Margin="0,5,0,0" Text="Version 1.0.0" />
-                                <TextBlock
-                                    Margin="0,5,0,0"
-                                    Foreground="Gray"
-                                    Text="ディレクトリ構造比較ツール" />
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
