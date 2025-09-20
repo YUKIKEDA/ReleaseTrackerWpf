@@ -108,31 +108,57 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
-        private async Task ScanAndCompareDirectoryAsync()
+        private async Task CompareDirectoryAsync()
         {
-            // TODO : Implement refresh functionality
-            // ディレクトリ構造のスキャンを再実行
+            // 選択されたスナップショットの検証
+            if (SelectedOldSnapshot == null || SelectedNewSnapshot == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較するスナップショットを両方選択してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
 
-            // ディレクトリ構造の比較を再実行
+            try
+            {
+                // プログレス付きInfoBarを表示
+                _notificationService.ShowProgressInfoBar("処理中", "ディレクトリ構造を比較中...", 0);
 
-            // リフレッシュ成功のInfoBarを表示
-            _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
+                // ディレクトリ構造の比較を実行
+                var comparisonResult = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
+
+                // 比較結果を表示用データに変換
+                await UpdateDisplayedDirectoryStructuresAsync(comparisonResult);
+
+                // 完了InfoBarを表示
+                var changeCount = comparisonResult.TotalAddedCount + comparisonResult.TotalDeletedCount + comparisonResult.TotalModifiedCount;
+                var message = changeCount > 0 
+                    ? $"比較が完了しました（{changeCount}個の変更を検出）" 
+                    : "比較が完了しました（変更はありませんでした）";
+                
+                _notificationService.ShowInfoBar("通知", message, InfoBarSeverity.Success, 5);
+            }
+            catch (Exception ex)
+            {
+                // エラーInfoBarを表示
+                _notificationService.ShowInfoBar("エラー", $"比較中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+            }
         }
 
         [RelayCommand]
-        private async Task ExportResultsAsync()
+        private Task ExportResultsAsync()
         {
             // TODO: Implement export functionality
             // エクスポート成功のInfoBarを表示
             _notificationService.ShowInfoBar("通知", "エクスポートが完了しました", InfoBarSeverity.Success, 5);
+            return Task.CompletedTask;
         }
 
         [RelayCommand]
-        private async Task ImportDescriptionsAsync()
+        private Task ImportDescriptionsAsync()
         {
             // TODO : Implement import functionality
             // インポート成功のInfoBarを表示
             _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
+            return Task.CompletedTask;
         }
 
         #endregion
@@ -148,6 +174,18 @@ namespace ReleaseTrackerWpf.ViewModels
                 var snapshot = await _snapshotRepository.LoadSnapshotAsync(snapshotFile);
                 AvailableSnapshots.Add(snapshot);
             }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// 比較結果を表示用のディレクトリ構造に変換します
+        /// </summary>
+        private async Task UpdateDisplayedDirectoryStructuresAsync(ComparisonResult comparisonResult)
+        {
+            
         }
 
         #endregion

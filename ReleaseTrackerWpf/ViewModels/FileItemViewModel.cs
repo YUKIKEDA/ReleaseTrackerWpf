@@ -10,6 +10,9 @@ namespace ReleaseTrackerWpf.ViewModels
         private string name = string.Empty;
 
         [ObservableProperty]
+        private string fullPath = string.Empty;
+
+        [ObservableProperty]
         private string relativePath = string.Empty;
 
         [ObservableProperty]
@@ -41,6 +44,7 @@ namespace ReleaseTrackerWpf.ViewModels
             var viewModel = new FileItemViewModel
             {
                 Name = item.Name,
+                FullPath = item.FullPath,
                 RelativePath = item.RelativePath,
                 IsDirectory = item.IsDirectory,
                 Size = item.Size,
@@ -62,6 +66,7 @@ namespace ReleaseTrackerWpf.ViewModels
             return new FileSystemEntry
             {
                 Name = Name,
+                FullPath = FullPath,
                 RelativePath = RelativePath,
                 IsDirectory = IsDirectory,
                 Size = Size,
