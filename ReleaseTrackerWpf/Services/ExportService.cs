@@ -8,7 +8,7 @@ using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class ExportService : IExportService
+    public class ExportService
     {
         public async Task ExportToExcelAsync(List<FileItem> items, string filePath)
         {

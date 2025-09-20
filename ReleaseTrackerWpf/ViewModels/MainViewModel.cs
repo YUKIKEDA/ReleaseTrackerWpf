@@ -1,21 +1,21 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
 using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
-        private readonly IDirectoryService _directoryService;
-        private readonly IComparisonService _comparisonService;
-        private readonly IExportService _exportService;
+        private readonly DirectoryService _directoryService;
+        private readonly ComparisonService _comparisonService;
+        private readonly ExportService _exportService;
 
         [ObservableProperty]
         private string newDirectoryPath = string.Empty;
@@ -74,7 +74,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private System.Timers.Timer? _autoScanTimer;
         private System.Timers.Timer? _infoBarTimer;
 
-        public MainViewModel(IDirectoryService directoryService, IComparisonService comparisonService, IExportService exportService)
+        public MainViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService)
         {
             _directoryService = directoryService;
             _comparisonService = comparisonService;

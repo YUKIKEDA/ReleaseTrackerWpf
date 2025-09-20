@@ -1,7 +1,3 @@
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
-using Microsoft.Win32;
 using ReleaseTrackerWpf.Services;
 using ReleaseTrackerWpf.ViewModels;
 using Wpf.Ui.Controls;

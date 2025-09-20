@@ -2,7 +2,7 @@ using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class ComparisonService : IComparisonService
+    public class ComparisonService
     {
         public ComparisonResult Compare(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
         {
