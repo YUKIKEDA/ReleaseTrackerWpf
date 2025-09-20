@@ -25,7 +25,6 @@ namespace ReleaseTrackerWpf.ViewModels
         public SettingsViewModel(SettingsViewModelArgs args)
         {
             _settingsService = args.SettingsService;
-            _ = LoadSettingsAsync();
         }
 
         #region Commands
@@ -67,18 +66,22 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #region Private Methods
 
-        private async Task LoadSettingsAsync()
-        {
-            await _settingsService.LoadSettingsAsync();
-            SnapshotsDirectory = _settingsService.SnapshotsDirectory;
-            AutoScanEnabled = _settingsService.AutoScanEnabled;
-        }
-
         private async Task SaveSettingsAsync()
         {
             _settingsService.SnapshotsDirectory = SnapshotsDirectory;
             _settingsService.AutoScanEnabled = AutoScanEnabled;
             await _settingsService.SaveSettingsAsync();
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public async Task LoadSettingsAsync()
+        {
+            await _settingsService.LoadSettingsAsync();
+            SnapshotsDirectory = _settingsService.SnapshotsDirectory;
+            AutoScanEnabled = _settingsService.AutoScanEnabled;
         }
 
         #endregion

@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 using Wpf.Ui.Controls;
@@ -43,9 +42,6 @@ namespace ReleaseTrackerWpf.ViewModels
             var settingsArgs = new SettingsViewModelArgs(args.SettingsService);
             SettingsViewModel = new SettingsViewModel(settingsArgs);
 
-            // Load available snapshots
-            _ = LoadAvailableSnapshotsAsync();
-
             // NotificationServiceの変更を監視
             _notificationService.NotificationChanged += OnNotificationChanged;
         }
@@ -61,8 +57,12 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #region Commands
 
-        [RelayCommand]
-        private async Task LoadAvailableSnapshotsAsync()
+        public async Task LoadSettingsAsync()
+        {
+            await SettingsViewModel.LoadSettingsAsync();
+        }
+
+        public async Task LoadAvailableSnapshotsAsync()
         {
             await ComparisonViewModel.LoadAvailableSnapshotsAsync(SettingsViewModel.SnapshotsDirectory);
         }

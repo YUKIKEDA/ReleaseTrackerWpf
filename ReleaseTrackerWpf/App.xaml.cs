@@ -10,7 +10,7 @@ namespace ReleaseTrackerWpf
     /// </summary>
     public partial class App : Application
     {
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
@@ -31,6 +31,12 @@ namespace ReleaseTrackerWpf
 
             // ViewModelの初期化
             var mainWindowViewModel = new MainWindowViewModel(args);
+
+            // 設定を読み込み
+            await mainWindowViewModel.LoadSettingsAsync();
+
+            // スナップショットを読み込み
+            await mainWindowViewModel.LoadAvailableSnapshotsAsync();
 
             // MainWindowの設定
             var mainWindow = new MainWindow
