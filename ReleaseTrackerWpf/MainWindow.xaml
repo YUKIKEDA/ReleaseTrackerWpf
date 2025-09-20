@@ -283,7 +283,9 @@
             x:Name="NotificationInfoBar"
             Grid.Row="2"
             Margin="10,0,10,10"
-            IsOpen="False"
-            Severity="Informational" />
+            IsOpen="{Binding IsInfoBarOpen}"
+            Title="{Binding InfoBarTitle}"
+            Message="{Binding InfoBarMessage}"
+            Severity="{Binding InfoBarSeverity}" />
     </Grid>
 </ui:FluentWindow>
