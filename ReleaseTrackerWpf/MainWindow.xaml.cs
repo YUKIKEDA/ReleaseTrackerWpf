@@ -11,7 +11,7 @@ namespace ReleaseTrackerWpf
 {
     public partial class MainWindow : FluentWindow
     {
-        private Snackbar? _currentSnackbar;
+        private Timer? _infoBarTimer;
 
         public MainWindow()
         {
@@ -67,123 +67,112 @@ namespace ReleaseTrackerWpf
 
 
         /// <summary>
-        /// Snackbarを表示します
+        /// InfoBarを表示します
         /// </summary>
         /// <param name="title">タイトル</param>
         /// <param name="message">メッセージ</param>
         /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
         public void ShowSnackbar(string title, string message, int timeoutSeconds = 0)
         {
-            System.Diagnostics.Debug.WriteLine($"ShowSnackbar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-            System.Diagnostics.Debug.WriteLine($"SnackbarPresenter is null: {SnackbarPresenter == null}");
-            
-            if (SnackbarPresenter == null)
-            {
-                System.Diagnostics.Debug.WriteLine("SnackbarPresenter is null, cannot show snackbar");
-                return;
-            }
-            
-            // 既存のSnackbarがある場合は閉じてから新しいSnackbarを作成
-            if (_currentSnackbar != null)
-            {
-                System.Diagnostics.Debug.WriteLine("Replacing existing snackbar with new one");
-                // 既存のSnackbarをクリア
-                _currentSnackbar = null;
-            }
-            
-            System.Diagnostics.Debug.WriteLine("Creating new snackbar");
-            _currentSnackbar = new Snackbar(SnackbarPresenter)
-            {
-                Title = title,
-                Content = message,
-                IsCloseButtonEnabled = true
-            };
+            System.Diagnostics.Debug.WriteLine($"ShowInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
 
-            // timeoutSecondsが0でない場合のみTimeoutを設定
-            if (timeoutSeconds > 0)
+            Dispatcher.Invoke(() =>
             {
-                _currentSnackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            }
+                // 既存のタイマーがあればクリア
+                _infoBarTimer?.Dispose();
 
-            System.Diagnostics.Debug.WriteLine($"Snackbar created, calling Show()");
-            _currentSnackbar.Show();
-            System.Diagnostics.Debug.WriteLine($"Snackbar.Show() completed");
+                // InfoBarの設定
+                NotificationInfoBar.Title = title;
+                NotificationInfoBar.Message = message;
+
+                // メッセージ内容に応じてSeverityを設定
+                if (message.Contains("エラー") || title.Contains("エラー"))
+                {
+                    NotificationInfoBar.Severity = InfoBarSeverity.Error;
+                }
+                else if (message.Contains("完了") || title.Contains("完了") || title.Contains("通知"))
+                {
+                    NotificationInfoBar.Severity = InfoBarSeverity.Success;
+                }
+                else if (message.Contains("処理中") || title.Contains("処理中"))
+                {
+                    NotificationInfoBar.Severity = InfoBarSeverity.Informational;
+                }
+                else
+                {
+                    NotificationInfoBar.Severity = InfoBarSeverity.Informational;
+                }
+
+                // InfoBarを表示
+                NotificationInfoBar.IsOpen = true;
+
+                // タイムアウトが設定されている場合
+                if (timeoutSeconds > 0)
+                {
+                    _infoBarTimer = new Timer(_ =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            NotificationInfoBar.IsOpen = false;
+                        });
+                        _infoBarTimer?.Dispose();
+                        _infoBarTimer = null;
+                    }, null, TimeSpan.FromSeconds(timeoutSeconds), Timeout.InfiniteTimeSpan);
+                }
+            });
         }
 
         /// <summary>
-        /// プログレス付きSnackbarを表示します
+        /// プログレス付きInfoBarを表示します
         /// </summary>
         /// <param name="title">タイトル</param>
         /// <param name="message">メッセージ</param>
         /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
         public void ShowProgressSnackbar(string title, string message, int timeoutSeconds = 0)
         {
-            System.Diagnostics.Debug.WriteLine($"ShowProgressSnackbar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-            System.Diagnostics.Debug.WriteLine($"SnackbarPresenter is null: {SnackbarPresenter == null}");
-            
-            if (SnackbarPresenter == null)
-            {
-                System.Diagnostics.Debug.WriteLine("SnackbarPresenter is null, cannot show progress snackbar");
-                return;
-            }
-            
-            try
-            {
-                var progressPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                var progressRing = new ProgressRing
-                {
-                    Width = 32,
-                    Height = 32,
-                    Margin = new Thickness(0, 0, 8, 0),
-                    IsIndeterminate = true
-                };
-                progressPanel.Children.Add(progressRing);
-                progressPanel.Children.Add(new System.Windows.Controls.TextBlock { Text = message });
+            System.Diagnostics.Debug.WriteLine($"ShowProgressInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
 
-                // 既存のSnackbarがある場合は閉じてから新しいSnackbarを作成
-                if (_currentSnackbar != null)
-                {
-                    System.Diagnostics.Debug.WriteLine("Replacing existing snackbar with new progress snackbar");
-                    // 既存のSnackbarをクリア
-                    _currentSnackbar = null;
-                }
-                
-                System.Diagnostics.Debug.WriteLine("Creating new progress snackbar");
-                _currentSnackbar = new Snackbar(SnackbarPresenter)
-                {
-                    Title = title,
-                    Content = progressPanel,
-                    IsCloseButtonEnabled = true
-                };
+            Dispatcher.Invoke(() =>
+            {
+                // 既存のタイマーがあればクリア
+                _infoBarTimer?.Dispose();
 
-                // timeoutSecondsが0でない場合のみTimeoutを設定
+                // InfoBarの設定（プログレス表示用のメッセージに変更）
+                NotificationInfoBar.Title = title;
+                NotificationInfoBar.Message = $"🔄 {message}";
+                NotificationInfoBar.Severity = InfoBarSeverity.Informational;
+
+                // InfoBarを表示
+                NotificationInfoBar.IsOpen = true;
+
+                // タイムアウトが設定されている場合
                 if (timeoutSeconds > 0)
                 {
-                    _currentSnackbar.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+                    _infoBarTimer = new Timer(_ =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            NotificationInfoBar.IsOpen = false;
+                        });
+                        _infoBarTimer?.Dispose();
+                        _infoBarTimer = null;
+                    }, null, TimeSpan.FromSeconds(timeoutSeconds), Timeout.InfiniteTimeSpan);
                 }
-
-                System.Diagnostics.Debug.WriteLine($"ProgressSnackbar created, calling Show()");
-                _currentSnackbar.Show();
-                System.Diagnostics.Debug.WriteLine($"ProgressSnackbar.Show() completed");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ProgressSnackbar failed: {ex.Message}");
-                // ProgressRingでエラーが発生した場合は通常のSnackbarにフォールバック
-                ShowSnackbar(title, $"🔄 {message}", timeoutSeconds);
-            }
+            });
         }
 
         /// <summary>
-        /// 現在のSnackbarの参照をクリアします
+        /// 現在のInfoBarを閉じます
         /// </summary>
         public void ClearSnackbar()
         {
-            if (_currentSnackbar != null)
+            Dispatcher.Invoke(() =>
             {
-                System.Diagnostics.Debug.WriteLine("Clearing current snackbar reference");
-                _currentSnackbar = null;
-            }
+                System.Diagnostics.Debug.WriteLine("Clearing current InfoBar");
+                _infoBarTimer?.Dispose();
+                _infoBarTimer = null;
+                NotificationInfoBar.IsOpen = false;
+            });
         }
 
 

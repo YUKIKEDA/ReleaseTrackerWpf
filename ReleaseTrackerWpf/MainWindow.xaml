@@ -302,11 +302,14 @@
             </TabItem>
         </TabControl>
 
-        <!--  WPF UI Snackbar Presenter (Overlay)  -->
-        <ui:SnackbarPresenter
+        <!--  WPF UI InfoBar for notifications (replacing Snackbar)  -->
+        <ui:InfoBar
             Grid.RowSpan="3"
-            x:Name="SnackbarPresenter"
-            Margin="0,0,0,0"
-            Panel.ZIndex="1000" />
+            x:Name="NotificationInfoBar"
+            Margin="20,0,20,20"
+            Panel.ZIndex="1000"
+            Severity="Informational"
+            IsOpen="False"
+            VerticalAlignment="Bottom" />
     </Grid>
 </ui:FluentWindow>
