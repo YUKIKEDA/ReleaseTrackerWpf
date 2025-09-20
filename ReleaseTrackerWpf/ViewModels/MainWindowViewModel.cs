@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 using Wpf.Ui.Controls;
 
@@ -29,16 +30,16 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
-        public MainWindowViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService, ISettingsService settingsService, INotificationService notificationService)
+        public MainWindowViewModel(MainWindowViewModelArgs args)
         {
-            _directoryService = directoryService;
-            _comparisonService = comparisonService;
-            _exportService = exportService;
-            _notificationService = notificationService;
+            _directoryService = args.DirectoryService;
+            _comparisonService = args.ComparisonService;
+            _exportService = args.ExportService;
+            _notificationService = args.NotificationService;
 
             // Initialize child ViewModels
-            ComparisonViewModel = new ComparisonViewModel(directoryService, comparisonService, exportService, notificationService);
-            SettingsViewModel = new SettingsViewModel(settingsService);
+            ComparisonViewModel = new ComparisonViewModel(args.DirectoryService, args.ComparisonService, args.ExportService, args.NotificationService);
+            SettingsViewModel = new SettingsViewModel(args.SettingsService);
 
             // Load available snapshots
             _ = LoadAvailableSnapshotsAsync();

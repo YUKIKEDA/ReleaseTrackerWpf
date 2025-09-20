@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 using ReleaseTrackerWpf.ViewModels;
 
@@ -20,8 +21,16 @@ namespace ReleaseTrackerWpf
             var settingsService = new SettingsService();
             var notificationService = new NotificationService();
 
+            // DTOクラスで依存関係をまとめる
+            var args = new MainWindowViewModelArgs(
+                directoryService, 
+                comparisonService, 
+                exportService, 
+                settingsService, 
+                notificationService);
+
             // ViewModelの初期化
-            var mainWindowViewModel = new MainWindowViewModel(directoryService, comparisonService, exportService, settingsService, notificationService);
+            var mainWindowViewModel = new MainWindowViewModel(args);
 
             // MainWindowの設定
             var mainWindow = new MainWindow
