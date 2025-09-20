@@ -176,7 +176,7 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
                             <StackPanel
@@ -306,7 +306,7 @@
         <ui:InfoBar
             Grid.Row="2"
             x:Name="NotificationInfoBar"
-            Margin="20,10,20,20"
+            Margin="20,0,20,20"
             Severity="Informational"
             IsOpen="False" />
     </Grid>
