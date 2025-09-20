@@ -38,8 +38,10 @@ namespace ReleaseTrackerWpf.ViewModels
             _notificationService = args.NotificationService;
 
             // Initialize child ViewModels
-            ComparisonViewModel = new ComparisonViewModel(args.DirectoryService, args.ComparisonService, args.ExportService, args.NotificationService);
-            SettingsViewModel = new SettingsViewModel(args.SettingsService);
+            var comparisonArgs = new ComparisonViewModelArgs(args.DirectoryService, args.ComparisonService, args.ExportService, args.NotificationService);
+            ComparisonViewModel = new ComparisonViewModel(comparisonArgs);
+            var settingsArgs = new SettingsViewModelArgs(args.SettingsService);
+            SettingsViewModel = new SettingsViewModel(settingsArgs);
 
             // Load available snapshots
             _ = LoadAvailableSnapshotsAsync();
@@ -64,11 +66,6 @@ namespace ReleaseTrackerWpf.ViewModels
         {
             await ComparisonViewModel.LoadAvailableSnapshotsAsync(SettingsViewModel.SnapshotsDirectory);
         }
-
-        #endregion
-
-
-        #region Private Methods
 
         #endregion
     }

@@ -60,12 +60,12 @@ namespace ReleaseTrackerWpf.ViewModels
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
 
-        public ComparisonViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService, INotificationService notificationService)
+        public ComparisonViewModel(ComparisonViewModelArgs args)
         {
-            _directoryService = directoryService;
-            _comparisonService = comparisonService;
-            _exportService = exportService;
-            _notificationService = notificationService;
+            _directoryService = args.DirectoryService;
+            _comparisonService = args.ComparisonService;
+            _exportService = args.ExportService;
+            _notificationService = args.NotificationService;
 
             // Setup auto-scan timer
             SetupAutoScanTimer();

@@ -3,6 +3,7 @@ using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 
 namespace ReleaseTrackerWpf.ViewModels
@@ -21,9 +22,9 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
-        public SettingsViewModel(ISettingsService settingsService)
+        public SettingsViewModel(SettingsViewModelArgs args)
         {
-            _settingsService = settingsService;
+            _settingsService = args.SettingsService;
             _ = LoadSettingsAsync();
         }
 
