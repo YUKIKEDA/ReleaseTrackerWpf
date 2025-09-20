@@ -131,7 +131,7 @@ namespace ReleaseTrackerWpf.ViewModels
         [RelayCommand]
         private async Task ExportResultsAsync()
         {
-                if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
                 ShowInfoBar("警告", "エクスポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
@@ -175,7 +175,7 @@ namespace ReleaseTrackerWpf.ViewModels
         [RelayCommand]
         private async Task ImportDescriptionsAsync()
         {
-                if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
                 ShowInfoBar("警告", "インポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
