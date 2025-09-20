@@ -62,7 +62,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
-        public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
+        public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = [];
         public DiffViewModel DiffViewModel { get; } = new();
 
         private ComparisonResult? _lastComparisonResult;
@@ -97,7 +97,33 @@ namespace ReleaseTrackerWpf.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
-                await ScanAndSaveSnapshotAsync(dialog.FolderName);
+                try
+                {                
+                    // プログレス付きInfoBarを表示
+                    ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
+
+                    var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
+                    var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                    var filePath = Path.Combine(SnapshotsDirectory, fileName);
+
+                    await _directoryService.SaveSnapshotAsync(snapshot, filePath);
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _ = LoadAvailableSnapshotsAsync();
+                        
+                        // 完了InfoBarを表示（24時間表示）
+                        ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {                        
+                        // エラーInfoBarを表示
+                        ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", 0);
+                    });
+                }
             }
         }
 
@@ -230,41 +256,6 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #region Private Methods
 
-        private async Task ScanAndSaveSnapshotAsync(string directoryPath)
-        {
-            try
-            {                
-                // プログレス付きInfoBarを表示
-                Debug.WriteLine("Showing progress InfoBar: スナップショットを作成中...");
-                ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
-
-                var snapshot = await _directoryService.ScanDirectoryAsync(directoryPath);
-                var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-                var filePath = Path.Combine(SnapshotsDirectory, fileName);
-
-                await _directoryService.SaveSnapshotAsync(snapshot, filePath);
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    _ = LoadAvailableSnapshotsAsync();
-                    
-                    // 完了InfoBarを表示（24時間表示）
-                    Debug.WriteLine("Showing completion InfoBar: スナップショットを作成しました");
-                    ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
-                });
-            }
-            catch (Exception ex)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    
-                    // エラーInfoBarを表示
-                    ShowInfoBar("エラー", "エラーが発生しました", 0);
-                });
-            }
-        }
-
         private async Task LoadAvailableSnapshotsAsync()
         {
             // 現在選択されているスナップショットの情報を保存
@@ -381,8 +372,6 @@ namespace ReleaseTrackerWpf.ViewModels
         /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
         public void ShowInfoBar(string title, string message, int timeoutSeconds = 0)
         {
-            System.Diagnostics.Debug.WriteLine($"ShowInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-
             Application.Current.Dispatcher.Invoke(() =>
             {
                 // 既存のタイマーがあればクリア
@@ -446,34 +435,6 @@ namespace ReleaseTrackerWpf.ViewModels
             };
         }
 
-        [RelayCommand]
-        private void BrowseNewDirectory()
-        {
-            var dialog = new OpenFolderDialog
-            {
-                Title = "新構造のフォルダを選択"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                NewDirectoryPath = dialog.FolderName;
-            }
-        }
-
-        [RelayCommand]
-        private async Task CreateNewSnapshot()
-        {
-            var dialog = new OpenFolderDialog
-            {
-                Title = "スナップショットを作成するフォルダを選択"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                await ScanAndSaveSnapshotAsync(dialog.FolderName);
-            }
-        }
-
         private async Task ScanNewDirectoryAsync()
         {
             if (string.IsNullOrEmpty(NewDirectoryPath) || !Directory.Exists(NewDirectoryPath))
@@ -498,11 +459,9 @@ namespace ReleaseTrackerWpf.ViewModels
             catch (Exception ex)
             {
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"スキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    
+                {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", "エラーが発生しました", 0);
+                    ShowInfoBar("エラー", $"スキャン中にエラーが発生しました: {ex.Message}", 0);
                 });
             }
         }
@@ -569,11 +528,9 @@ namespace ReleaseTrackerWpf.ViewModels
             catch (Exception ex)
             {
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"比較処理中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    
+                {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", "エラーが発生しました", 0);
+                    ShowInfoBar("エラー", $"比較処理中にエラーが発生しました: {ex.Message}", 0);
                 });
             }
         }
