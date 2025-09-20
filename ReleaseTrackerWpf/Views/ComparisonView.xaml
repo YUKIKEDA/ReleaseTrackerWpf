@@ -1,0 +1,200 @@
+<UserControl
+    x:Class="ReleaseTrackerWpf.Views.ComparisonView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:ReleaseTrackerWpf.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewmodels="clr-namespace:ReleaseTrackerWpf.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ComparisonViewModel}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Snapshot Add Button (Above Grid)  -->
+        <ui:Button
+            Grid.Row="0"
+            Margin="0,10,0,10"
+            HorizontalAlignment="Right"
+            Command="{Binding AddSnapshotCommand}"
+            Content="スナップショット追加"
+            Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+        <!--  Control Panel  -->
+        <ui:Card Grid.Row="1" Margin="0,0,0,10">
+            <Grid Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Old Header  -->
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,0,10"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Text="比較元"
+                    Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <!--  Old Structure Selection  -->
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,10,0">
+                    <ComboBox
+                        Margin="0,0,0,10"
+                        ItemsSource="{Binding AvailableSnapshots}"
+                        SelectedItem="{Binding SelectedOldSnapshot}"
+                        Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock FontWeight="Bold" Text="{Binding RootPath}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="Gray"
+                                        Text="{Binding CreatedAt, StringFormat='作成日時: {0:yyyy/MM/dd HH:mm}'}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <!--  New Header  -->
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,0,10"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Text="比較先"
+                    Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <!--  New Structure Selection  -->
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="10,0,0,0">
+                    <ComboBox
+                        Margin="0,0,0,10"
+                        ItemsSource="{Binding AvailableSnapshots}"
+                        SelectedItem="{Binding SelectedNewSnapshot}"
+                        Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock FontWeight="Bold" Text="{Binding RootPath}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="Gray"
+                                        Text="{Binding CreatedAt, StringFormat='作成日時: {0:yyyy/MM/dd HH:mm}'}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <!--  First Time Snapshot Creation Button (Centered)  -->
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding HasNoSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ui:Button
+                        Padding="40,20"
+                        HorizontalAlignment="Center"
+                        Command="{Binding AddSnapshotCommand}"
+                        Content="スナップショット作成"
+                        FontSize="18"
+                        FontWeight="Bold" />
+                    <TextBlock
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="14"
+                        Foreground="Gray"
+                        Text="フォルダを選択してスナップショットを作成してください" />
+                </StackPanel>
+
+            </Grid>
+        </ui:Card>
+
+        <!--  Results Area  -->
+        <ui:Card Grid.Row="2" VerticalAlignment="Top">
+            <Grid Margin="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="比較結果" />
+                    <StackPanel Margin="20,0,0,0" Orientation="Horizontal">
+                        <ui:Button
+                            Margin="0,0,5,0"
+                            Command="{Binding RefreshComparisonCommand}"
+                            Content="スキャン実行" />
+                        <ui:Button
+                            Margin="5,0,5,0"
+                            Command="{Binding ExportResultsCommand}"
+                            Content="エクスポート" />
+                        <ui:Button
+                            Margin="5,0,0,0"
+                            Command="{Binding ImportDescriptionsCommand}"
+                            Content="説明インポート" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!--  Comparison Results DataGrid (Old)  -->
+                <TreeView
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    AllowDrop="True">
+                    <TreeViewItem Header="Work Documents" IsExpanded="True">
+                        <TreeViewItem Header="Feature Schedule" />
+                    </TreeViewItem>
+                </TreeView>
+
+                <!--  Comparison Results DataGrid (New)  -->
+                <TreeView
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    AllowDrop="True">
+                    <TreeViewItem Header="Work Documents" IsExpanded="True">
+                        <TreeViewItem Header="Feature Schedule" />
+                    </TreeViewItem>
+                </TreeView>
+            </Grid>
+        </ui:Card>
+    </Grid>
+</UserControl>
