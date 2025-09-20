@@ -18,9 +18,10 @@ namespace ReleaseTrackerWpf
             var comparisonService = new ComparisonService();
             var exportService = new ExportService();
             var settingsService = new SettingsService();
+            var notificationService = new NotificationService();
 
             // ViewModelの初期化
-            var mainWindowViewModel = new MainWindowViewModel(directoryService, comparisonService, exportService, settingsService);
+            var mainWindowViewModel = new MainWindowViewModel(directoryService, comparisonService, exportService, settingsService, notificationService);
 
             // MainWindowの設定
             var mainWindow = new MainWindow

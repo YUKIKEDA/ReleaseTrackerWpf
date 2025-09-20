@@ -15,6 +15,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly DirectoryService _directoryService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
+        private readonly INotificationService _notificationService;
 
         #region Observable Properties
 
@@ -35,18 +36,11 @@ namespace ReleaseTrackerWpf.ViewModels
         [ObservableProperty]
         private bool autoScanEnabled = false;
 
-        // InfoBar関連のプロパティ
-        [ObservableProperty]
-        private bool isInfoBarOpen = false;
-
-        [ObservableProperty]
-        private string infoBarTitle = string.Empty;
-
-        [ObservableProperty]
-        private string infoBarMessage = string.Empty;
-        
-        [ObservableProperty]
-        private InfoBarSeverity infoBarSeverity = InfoBarSeverity.Informational;
+        // InfoBar関連のプロパティ（NotificationServiceから取得）
+        public bool IsInfoBarOpen => _notificationService.IsInfoBarOpen;
+        public string InfoBarTitle => _notificationService.InfoBarTitle;
+        public string InfoBarMessage => _notificationService.InfoBarMessage;
+        public InfoBarSeverity InfoBarSeverity => _notificationService.InfoBarSeverity;
 
         #endregion
 
@@ -62,16 +56,28 @@ namespace ReleaseTrackerWpf.ViewModels
 
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
-        private System.Timers.Timer? _infoBarTimer;
 
-        public ComparisonViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService)
+        public ComparisonViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService, INotificationService notificationService)
         {
             _directoryService = directoryService;
             _comparisonService = comparisonService;
             _exportService = exportService;
+            _notificationService = notificationService;
 
             // Setup auto-scan timer
             SetupAutoScanTimer();
+
+            // NotificationServiceの変更を監視
+            _notificationService.NotificationChanged += OnNotificationChanged;
+        }
+
+        private void OnNotificationChanged(object? sender, NotificationEventArgs e)
+        {
+            // プロパティ変更を通知
+            OnPropertyChanged(nameof(IsInfoBarOpen));
+            OnPropertyChanged(nameof(InfoBarTitle));
+            OnPropertyChanged(nameof(InfoBarMessage));
+            OnPropertyChanged(nameof(InfoBarSeverity));
         }
 
         #region Commands
@@ -89,7 +95,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 try
                 {                
                     // プログレス付きInfoBarを表示
-                    ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
+                    _notificationService.ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
 
                     var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
                     var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
@@ -102,7 +108,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         _ = LoadAvailableSnapshotsAsync(GetSnapshotsDirectory());
                         
                         // 完了InfoBarを表示（24時間表示）
-                        ShowInfoBar("通知", "スナップショットを作成しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
+                        _notificationService.ShowInfoBar("通知", "スナップショットを作成しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                     });
                 }
                 catch (Exception ex)
@@ -110,7 +116,7 @@ namespace ReleaseTrackerWpf.ViewModels
                     Application.Current.Dispatcher.Invoke(() =>
                     {                        
                         // エラーInfoBarを表示
-                        ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                        _notificationService.ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                     });
                 }
             }
@@ -121,7 +127,7 @@ namespace ReleaseTrackerWpf.ViewModels
         {
             if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
-                ShowInfoBar("警告", "エクスポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
+                _notificationService.ShowInfoBar("警告", "エクスポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
             }
 
@@ -151,11 +157,11 @@ namespace ReleaseTrackerWpf.ViewModels
                     }
                     
                     // エクスポート成功のInfoBarを表示
-                    ShowInfoBar("通知", "エクスポートが完了しました", InfoBarSeverity.Success, 5);
+                    _notificationService.ShowInfoBar("通知", "エクスポートが完了しました", InfoBarSeverity.Success, 5);
                 }
                 catch (Exception ex)
                 {
-                    ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                    _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
             }
         }
@@ -165,7 +171,7 @@ namespace ReleaseTrackerWpf.ViewModels
         {
             if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
-                ShowInfoBar("警告", "インポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
+                _notificationService.ShowInfoBar("警告", "インポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
             }
 
@@ -204,11 +210,11 @@ namespace ReleaseTrackerWpf.ViewModels
                     }
                     
                     // インポート成功のInfoBarを表示
-                    ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
+                    _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
                 }
                 catch (Exception ex)
                 {
-                    ShowInfoBar("エラー", $"説明のインポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                    _notificationService.ShowInfoBar("エラー", $"説明のインポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
             }
         }
@@ -270,7 +276,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 catch (Exception ex)
                 {
                     // Skip corrupted files and show warning
-                    ShowInfoBar("警告", $"スナップショットファイルの読み込みに失敗しました: {Path.GetFileName(file)} ({ex.Message})", InfoBarSeverity.Warning, 5);
+                    _notificationService.ShowInfoBar("警告", $"スナップショットファイルの読み込みに失敗しました: {Path.GetFileName(file)} ({ex.Message})", InfoBarSeverity.Warning, 5);
                 }
             }
 
@@ -309,7 +315,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // プログレス付きInfoBarを表示
-                    ShowProgressInfoBar("処理中", "スキャン中...", 0);
+                    _notificationService.ShowProgressInfoBar("処理中", "スキャン中...", 0);
                 });
 
                 NewSnapshot = await _directoryService.ScanDirectoryAsync(NewDirectoryPath);
@@ -317,7 +323,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // 完了InfoBarを表示（24時間表示）
-                    ShowInfoBar("通知", "スキャンが完了しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
+                    _notificationService.ShowInfoBar("通知", "スキャンが完了しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                 });
             }
             catch (Exception ex)
@@ -325,7 +331,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", $"スキャン中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                    _notificationService.ShowInfoBar("エラー", $"スキャン中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 });
             }
         }
@@ -340,7 +346,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // プログレス付きInfoBarを表示
-                    ShowProgressInfoBar("処理中", "比較処理中...", 0);
+                    _notificationService.ShowProgressInfoBar("処理中", "比較処理中...", 0);
                 });
 
                 await Task.Run(() =>
@@ -364,7 +370,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         var statusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
 
                         // 完了InfoBarを表示（24時間表示）
-                        ShowInfoBar("通知", statusMessage, InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
+                        _notificationService.ShowInfoBar("通知", statusMessage, InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                     }
                 });
 
@@ -394,7 +400,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", $"比較処理中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                    _notificationService.ShowInfoBar("エラー", $"比較処理中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 });
             }
         }
@@ -419,93 +425,6 @@ namespace ReleaseTrackerWpf.ViewModels
         private string GetSnapshotsDirectory()
         {
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots");
-        }
-
-        #endregion
-
-        #region Utility Methods
-
-        /// <summary>
-        /// プログレス付きInfoBarを表示します
-        /// </summary>
-        /// <param name="title">タイトル</param>
-        /// <param name="message">メッセージ</param>
-        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
-        public void ShowProgressInfoBar(string title, string message, int timeoutSeconds = 0)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                // 既存のタイマーがあればクリア
-                _infoBarTimer?.Dispose();
-
-                // InfoBarの設定（プログレス表示用のメッセージに変更）
-                InfoBarTitle = title;
-                InfoBarMessage = $"🔄 {message}";
-                InfoBarSeverity = InfoBarSeverity.Informational;
-
-                // InfoBarを表示
-                IsInfoBarOpen = true;
-
-                // タイムアウトが設定されている場合
-                if (timeoutSeconds > 0)
-                {
-                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
-                    _infoBarTimer.Elapsed += (s, e) =>
-                    {
-                        _infoBarTimer.Stop();
-                        _infoBarTimer.Dispose();
-                        _infoBarTimer = null;
-                        
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            IsInfoBarOpen = false;
-                        });
-                    };
-                    _infoBarTimer.Start();
-                }
-            });
-        }
-
-        /// <summary>
-        /// InfoBarを表示します
-        /// </summary>
-        /// <param name="title">タイトル</param>
-        /// <param name="message">メッセージ</param>
-        /// <param name="severity">InfoBarSeverity</param>
-        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
-        public void ShowInfoBar(string title, string message, InfoBarSeverity severity = InfoBarSeverity.Informational, int timeoutSeconds = 0)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                // 既存のタイマーがあればクリア
-                _infoBarTimer?.Dispose();
-
-                // InfoBarの設定
-                InfoBarTitle = title;
-                InfoBarMessage = message;
-                InfoBarSeverity = severity;
-
-                // InfoBarを表示
-                IsInfoBarOpen = true;
-
-                // タイムアウトが設定されている場合
-                if (timeoutSeconds > 0)
-                {
-                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
-                    _infoBarTimer.Elapsed += (s, e) =>
-                    {
-                        _infoBarTimer.Stop();
-                        _infoBarTimer.Dispose();
-                        _infoBarTimer = null;
-                        
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            IsInfoBarOpen = false;
-                        });
-                    };
-                    _infoBarTimer.Start();
-                }
-            });
         }
 
         #endregion
