@@ -25,39 +25,5 @@ namespace ReleaseTrackerWpf
             DataContext = viewModel;
         }
 
-        private void OpenSnapshotsFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var viewModel = DataContext as MainViewModel;
-            if (viewModel != null && Directory.Exists(viewModel.SnapshotsDirectory))
-            {
-                Process.Start("explorer.exe", viewModel.SnapshotsDirectory);
-            }
-        }
-
-        private void ChangeSnapshotsFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var viewModel = DataContext as MainViewModel;
-            if (viewModel != null)
-            {
-                var dialog = new OpenFileDialog
-                {
-                    Title = "スナップショット保存先フォルダを選択",
-                    FileName = "フォルダを選択",
-                    Filter = "Folder|*.folder",
-                    CheckFileExists = false,
-                    CheckPathExists = true
-                };
-
-                var result = dialog.ShowDialog();
-                if (result == true)
-                {
-                    var selectedPath = Path.GetDirectoryName(dialog.FileName);
-                    if (!string.IsNullOrEmpty(selectedPath))
-                    {
-                        viewModel.SnapshotsDirectory = selectedPath;
-                    }
-                }
-            }
-        }
     }
 }

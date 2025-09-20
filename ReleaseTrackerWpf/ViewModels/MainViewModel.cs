@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using Wpf.Ui.Controls;
@@ -375,7 +376,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         // 自動保存の場合は新しいスナップショットのみを追加（UIスレッドで実行）
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            AddNewSnapshotToListAsync(NewSnapshot);
+                            _ = AddNewSnapshotToListAsync(NewSnapshot);
                         });
                     }
                     catch
@@ -523,7 +524,39 @@ namespace ReleaseTrackerWpf.ViewModels
             }
         }
 
-        private async Task AddNewSnapshotToListAsync(DirectorySnapshot snapshot)
+        [RelayCommand]
+        private void OpenSnapshotsFolder()
+        {
+            if (Directory.Exists(SnapshotsDirectory))
+            {
+                Process.Start("explorer.exe", SnapshotsDirectory);
+            }
+        }
+
+        [RelayCommand]
+        private void ChangeSnapshotsFolder()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "スナップショット保存先フォルダを選択",
+                FileName = "フォルダを選択",
+                Filter = "Folder|*.folder",
+                CheckFileExists = false,
+                CheckPathExists = true
+            };
+
+            var result = dialog.ShowDialog();
+            if (result == true)
+            {
+                var selectedPath = Path.GetDirectoryName(dialog.FileName);
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    SnapshotsDirectory = selectedPath;
+                }
+            }
+        }
+
+        private Task AddNewSnapshotToListAsync(DirectorySnapshot snapshot)
         {
             // 重複チェック
             var snapshotKey = $"{snapshot.RootPath}_{snapshot.CreatedAt:yyyyMMdd_HHmmss}";
@@ -536,6 +569,8 @@ namespace ReleaseTrackerWpf.ViewModels
                 OnPropertyChanged(nameof(HasSnapshots));
                 OnPropertyChanged(nameof(HasNoSnapshots));
             }
+            
+            return Task.CompletedTask;
         }
 
         private async Task LoadAvailableSnapshotsAsync()

@@ -248,7 +248,7 @@
                                             VerticalAlignment="Center"
                                             Background="Transparent"
                                             BorderThickness="0"
-                                            Click="ChangeSnapshotsFolder_Click"
+                                            Command="{Binding ChangeSnapshotsFolderCommand}"
                                             ToolTip="保存先を変更">
                                             <ui:SymbolIcon FontSize="14" Symbol="FolderOpen16" />
                                         </ui:Button>
@@ -258,7 +258,7 @@
                                 <ui:Button
                                     Margin="0,5,0,0"
                                     HorizontalAlignment="Left"
-                                    Click="OpenSnapshotsFolder_Click"
+                                    Command="{Binding OpenSnapshotsFolderCommand}"
                                     Content="保存先フォルダを開く" />
                             </StackPanel>
                         </GroupBox>
