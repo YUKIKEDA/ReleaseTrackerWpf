@@ -68,9 +68,8 @@ namespace ReleaseTrackerWpf.ViewModels
 
         private async Task SaveSettingsAsync()
         {
-            _settingsService.SnapshotsDirectory = SnapshotsDirectory;
-            _settingsService.AutoScanEnabled = AutoScanEnabled;
-            await _settingsService.SaveSettingsAsync();
+            var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled);
+            await _settingsService.SaveSettingsAsync(settings);
         }
 
         #endregion
@@ -79,9 +78,9 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public async Task LoadSettingsAsync()
         {
-            await _settingsService.LoadSettingsAsync();
-            SnapshotsDirectory = _settingsService.SnapshotsDirectory;
-            AutoScanEnabled = _settingsService.AutoScanEnabled;
+            var settings = await _settingsService.LoadSettingsAsync();
+            SnapshotsDirectory = settings.SnapshotsDirectory;
+            AutoScanEnabled = settings.AutoScanEnabled;
         }
 
         #endregion

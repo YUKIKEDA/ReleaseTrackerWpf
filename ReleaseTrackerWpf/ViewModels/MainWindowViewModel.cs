@@ -37,8 +37,15 @@ namespace ReleaseTrackerWpf.ViewModels
             _notificationService = args.NotificationService;
 
             // Initialize child ViewModels
-            var comparisonArgs = new ComparisonViewModelArgs(args.DirectoryService, args.ComparisonService, args.ExportService, args.NotificationService);
+            var comparisonArgs = new ComparisonViewModelArgs(
+                args.DirectoryService, 
+                args.ComparisonService, 
+                args.ExportService, 
+                args.NotificationService, 
+                args.SettingsService
+            );
             ComparisonViewModel = new ComparisonViewModel(comparisonArgs);
+
             var settingsArgs = new SettingsViewModelArgs(args.SettingsService);
             SettingsViewModel = new SettingsViewModel(settingsArgs);
 
@@ -55,7 +62,7 @@ namespace ReleaseTrackerWpf.ViewModels
             OnPropertyChanged(nameof(InfoBarSeverity));
         }
 
-        #region Commands
+        #region Public Methods
 
         public async Task LoadSettingsAsync()
         {

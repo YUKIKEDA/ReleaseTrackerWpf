@@ -164,7 +164,7 @@
                     <StackPanel Margin="20,0,0,0" Orientation="Horizontal">
                         <ui:Button
                             Margin="0,0,5,0"
-                            Command="{Binding RefreshComparisonCommand}"
+                            Command="{Binding ScanAndCompareDirectoryAsync}"
                             Content="スキャン実行" />
                         <ui:Button
                             Margin="5,0,5,0"
@@ -182,30 +182,30 @@
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,5,0"
-                    ItemsSource="{Binding OldUnionItems}">
+                    ItemsSource="{Binding OldDisplayedDirectoryStructure}">
                     <TreeView.Resources>
-                        <!-- FileItemViewModel用のHierarchicalDataTemplate -->
+                        <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
-                                <!-- フォルダ/ファイルアイコン -->
-                                <ui:SymbolIcon 
+                                <!--  フォルダ/ファイルアイコン  -->
+                                <ui:SymbolIcon
                                     Margin="0,0,5,0"
-                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}"
+                                    VerticalAlignment="Center"
                                     FontSize="14"
-                                    VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                <TextBlock 
-                                    Margin="10,0,0,0" 
-                                    FontSize="11" 
+                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
                                     Foreground="Gray"
                                     Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}"
-                                    VerticalAlignment="Center" />
+                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
                     </TreeView.Resources>
                     <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                        <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True" />
                             <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Margin" Value="0,1" />
@@ -237,7 +237,7 @@
                         </Style>
                     </TreeView.ItemContainerStyle>
                     <TreeView.Style>
-                        <Style TargetType="TreeView" BasedOn="{StaticResource {x:Type TreeView}}">
+                        <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
                             <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
                             <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
                             <Setter Property="BorderThickness" Value="1" />
@@ -251,30 +251,30 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    ItemsSource="{Binding NewUnionItems}">
+                    ItemsSource="{Binding NewDisplayedDirectoryStructure}">
                     <TreeView.Resources>
-                        <!-- FileItemViewModel用のHierarchicalDataTemplate -->
+                        <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
                             <StackPanel Orientation="Horizontal">
-                                <!-- フォルダ/ファイルアイコン -->
-                                <ui:SymbolIcon 
+                                <!--  フォルダ/ファイルアイコン  -->
+                                <ui:SymbolIcon
                                     Margin="0,0,5,0"
-                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}"
+                                    VerticalAlignment="Center"
                                     FontSize="14"
-                                    VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                <TextBlock 
-                                    Margin="10,0,0,0" 
-                                    FontSize="11" 
+                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
                                     Foreground="Gray"
                                     Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}"
-                                    VerticalAlignment="Center" />
+                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
                     </TreeView.Resources>
                     <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                        <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
                             <Setter Property="IsExpanded" Value="True" />
                             <Setter Property="Padding" Value="4,2" />
                             <Setter Property="Margin" Value="0,1" />
@@ -306,7 +306,7 @@
                         </Style>
                     </TreeView.ItemContainerStyle>
                     <TreeView.Style>
-                        <Style TargetType="TreeView" BasedOn="{StaticResource {x:Type TreeView}}">
+                        <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
                             <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
                             <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
                             <Setter Property="BorderThickness" Value="1" />

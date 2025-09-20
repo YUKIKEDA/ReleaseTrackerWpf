@@ -1,13 +1,11 @@
 using System.Threading.Tasks;
+using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
     public interface ISettingsService
     {
-        string SnapshotsDirectory { get; set; }
-        bool AutoScanEnabled { get; set; }
-        
-        Task LoadSettingsAsync();
-        Task SaveSettingsAsync();
+        Task<SettingsData> LoadSettingsAsync();
+        Task SaveSettingsAsync(SettingsData settings);
     }
 }

@@ -9,5 +9,6 @@ namespace ReleaseTrackerWpf.Models
         DirectoryService DirectoryService,
         ComparisonService ComparisonService,
         ExportService ExportService,
-        INotificationService NotificationService);
+        INotificationService NotificationService,
+        ISettingsService SettingsService);
 }

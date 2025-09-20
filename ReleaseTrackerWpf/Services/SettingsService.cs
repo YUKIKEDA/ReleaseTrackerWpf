@@ -1,84 +1,63 @@
-using System;
 using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
+using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
     public class SettingsService : ISettingsService
     {
-        private readonly string _settingsFilePath;
-        private SettingsData _settings;
+        public const string SettingsDirectoryName = "ReleaseTracker";
+        public const string SettingsFileName = "settings.json";
+
+        private static readonly string _appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        private static readonly string _settingsDirectoryPath = Path.Combine(_appDataPath, SettingsDirectoryName);
+        private static readonly string _settingsFilePath = Path.Combine(_settingsDirectoryPath, SettingsFileName);
 
         public SettingsService()
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var settingsDir = Path.Combine(appDataPath, "ReleaseTracker");
-            Directory.CreateDirectory(settingsDir);
-            _settingsFilePath = Path.Combine(settingsDir, "settings.json");
-            
-            _settings = new SettingsData();
+            Directory.CreateDirectory(_settingsDirectoryPath);
         }
 
-        public string SnapshotsDirectory
-        {
-            get => _settings.SnapshotsDirectory;
-            set => _settings.SnapshotsDirectory = value;
-        }
-
-        public bool AutoScanEnabled
-        {
-            get => _settings.AutoScanEnabled;
-            set => _settings.AutoScanEnabled = value;
-        }
-
-        public async Task LoadSettingsAsync()
+        public async Task<SettingsData> LoadSettingsAsync()
         {
             try
             {
                 if (File.Exists(_settingsFilePath))
                 {
                     var json = await File.ReadAllTextAsync(_settingsFilePath);
-                    _settings = JsonSerializer.Deserialize<SettingsData>(json) ?? new SettingsData();
+                    return JsonSerializer.Deserialize<SettingsData>(json) ?? GetDefaultSettings();
                 }
                 else
                 {
-                    // デフォルト設定
-                    _settings = new SettingsData
-                    {
-                        SnapshotsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots"),
-                        AutoScanEnabled = false
-                    };
+                    return GetDefaultSettings();
                 }
             }
             catch (Exception)
             {
                 // 設定ファイルの読み込みに失敗した場合はデフォルト設定を使用
-                _settings = new SettingsData
-                {
-                    SnapshotsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots"),
-                    AutoScanEnabled = false
-                };
+                return GetDefaultSettings();
             }
         }
 
-        public async Task SaveSettingsAsync()
+        public async Task SaveSettingsAsync(SettingsData settings)
         {
             try
             {
-                var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 await File.WriteAllTextAsync(_settingsFilePath, json);
             }
             catch (Exception)
             {
-                // 設定の保存に失敗した場合は無視
+                throw new Exception("Failed to save settings");
             }
         }
 
-        private class SettingsData
+        private static SettingsData GetDefaultSettings()
         {
-            public string SnapshotsDirectory { get; set; } = string.Empty;
-            public bool AutoScanEnabled { get; set; } = false;
+            return new SettingsData(
+                SnapshotsDirectory: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots"),
+                AutoScanEnabled: true
+            );
         }
     }
 }
