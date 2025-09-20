@@ -91,7 +91,8 @@
                          ItemContainerStyle="{StaticResource TreeItemStyle}"
                          Background="White"
                          BorderThickness="1"
-                         BorderBrush="LightGray"/>
+                         BorderBrush="LightGray"
+                         Padding="10"/>
             </ScrollViewer>
 
             <!-- Splitter -->
@@ -108,7 +109,8 @@
                          ItemContainerStyle="{StaticResource TreeItemStyle}"
                          Background="White"
                          BorderThickness="1"
-                         BorderBrush="LightGray"/>
+                         BorderBrush="LightGray"
+                         Padding="10"/>
             </ScrollViewer>
     </Grid>
 </UserControl>
