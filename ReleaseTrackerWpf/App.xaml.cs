@@ -20,14 +20,14 @@ namespace ReleaseTrackerWpf
             var snapshotRepository = new SnapshotRepository();
 
             // サービスの初期化
-            var directoryService = new DirectoryService();
+            var directoryScanService = new DirectoryScanService();
             var comparisonService = new ComparisonService();
             var exportService = new ExportService();
             var notificationService = new NotificationService();
 
             // DTOクラスで依存関係をまとめる
             var args = new MainWindowViewModelArgs(
-                directoryService, 
+                directoryScanService, 
                 comparisonService, 
                 exportService, 
                 settingsRepository, 

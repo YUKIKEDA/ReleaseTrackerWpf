@@ -13,7 +13,7 @@ namespace ReleaseTrackerWpf.ViewModels
 {
     public partial class ComparisonViewModel : ObservableObject
     {
-        private readonly DirectoryService _directoryService;
+        private readonly DirectoryScanService _directoryScanService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
         private readonly INotificationService _notificationService;
@@ -50,7 +50,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public ComparisonViewModel(ComparisonViewModelArgs args)
         {
-            _directoryService = args.DirectoryService;
+            _directoryScanService = args.DirectoryScanService;
             _comparisonService = args.ComparisonService;
             _exportService = args.ExportService;
             _notificationService = args.NotificationService;
@@ -88,7 +88,7 @@ namespace ReleaseTrackerWpf.ViewModels
                     _notificationService.ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
 
                     var settings = await _settingsRepository.GetAsync();
-                    var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
+                    var snapshot = await _directoryScanService.ScanDirectoryAsync(dialog.FolderName);
                     var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, DateTime.Now);
                     var filePath = Path.Combine(settings.SnapshotsDirectory, fileName);
 
@@ -108,6 +108,18 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
+        private async Task ScanAndCompareDirectoryAsync()
+        {
+            // TODO : Implement refresh functionality
+            // ディレクトリ構造のスキャンを再実行
+
+            // ディレクトリ構造の比較を再実行
+
+            // リフレッシュ成功のInfoBarを表示
+            _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
+        }
+
+        [RelayCommand]
         private async Task ExportResultsAsync()
         {
             // TODO: Implement export functionality
@@ -120,18 +132,6 @@ namespace ReleaseTrackerWpf.ViewModels
         {
             // TODO : Implement import functionality
             // インポート成功のInfoBarを表示
-            _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
-        }
-
-        [RelayCommand]
-        private async Task ScanAndCompareDirectoryAsync()
-        {
-            // TODO : Implement refresh functionality
-            // ディレクトリ構造のスキャンを再実行
-
-            // ディレクトリ構造の比較を再実行
-
-            // リフレッシュ成功のInfoBarを表示
             _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
         }
 

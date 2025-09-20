@@ -7,7 +7,7 @@ namespace ReleaseTrackerWpf.Models
     /// MainWindowViewModelのコンストラクタ引数をまとめるDTOクラス
     /// </summary>
     public record MainWindowViewModelArgs(
-        DirectoryService DirectoryService,
+        DirectoryScanService DirectoryScanService,
         ComparisonService ComparisonService,
         ExportService ExportService,
         ISettingsRepository SettingsRepository,

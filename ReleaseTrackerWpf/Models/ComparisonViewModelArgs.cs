@@ -7,7 +7,7 @@ namespace ReleaseTrackerWpf.Models
     /// ComparisonViewModelのコンストラクタ引数をまとめるDTOクラス
     /// </summary>
     public record ComparisonViewModelArgs(
-        DirectoryService DirectoryService,
+        DirectoryScanService DirectoryScanService,
         ComparisonService ComparisonService,
         ExportService ExportService,
         INotificationService NotificationService,

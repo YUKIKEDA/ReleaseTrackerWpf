@@ -3,7 +3,7 @@ using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class DirectoryService
+    public class DirectoryScanService
     {
         public async Task<DirectorySnapshot> ScanDirectoryAsync(string path)
         {

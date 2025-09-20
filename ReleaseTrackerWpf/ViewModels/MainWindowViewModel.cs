@@ -7,7 +7,7 @@ namespace ReleaseTrackerWpf.ViewModels
 {
     public partial class MainWindowViewModel : ObservableObject
     {
-        private readonly DirectoryService _directoryService;
+        private readonly DirectoryScanService _directoryScanService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
         private readonly INotificationService _notificationService;
@@ -31,14 +31,14 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public MainWindowViewModel(MainWindowViewModelArgs args)
         {
-            _directoryService = args.DirectoryService;
+            _directoryScanService = args.DirectoryScanService;
             _comparisonService = args.ComparisonService;
             _exportService = args.ExportService;
             _notificationService = args.NotificationService;
 
             // Initialize child ViewModels
             var comparisonArgs = new ComparisonViewModelArgs(
-                args.DirectoryService, 
+                args.DirectoryScanService, 
                 args.ComparisonService, 
                 args.ExportService, 
                 args.NotificationService, 
