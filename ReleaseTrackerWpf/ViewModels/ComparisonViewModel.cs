@@ -86,7 +86,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
                     var settings = await _settingsService.LoadSettingsAsync();
                     var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
-                    var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                    var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, DateTime.Now);
                     var filePath = Path.Combine(settings.SnapshotsDirectory, fileName);
 
                     await _directoryService.SaveSnapshotAsync(snapshot, filePath);
@@ -144,7 +144,13 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public async Task LoadAvailableSnapshotsAsync(string snapshotsDirectory)
         {
-
+            var settings = await _settingsService.LoadSettingsAsync();
+            var snapshotFiles = Directory.GetFiles(settings.SnapshotsDirectory, DirectorySnapshot.SnapshotFilePattern);
+            foreach (var snapshotFile in snapshotFiles)
+            {
+                var snapshot = await _directoryService.LoadSnapshotAsync(snapshotFile);
+                AvailableSnapshots.Add(snapshot);
+            }
         }
 
         #endregion
