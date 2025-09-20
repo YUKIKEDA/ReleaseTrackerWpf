@@ -11,11 +11,15 @@ using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
-    public partial class MainViewModel : ObservableObject
+    public partial class MainWindowViewModel : ObservableObject
     {
         private readonly DirectoryService _directoryService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
+
+        #region Observable Properties
+
+        #endregion
 
         [ObservableProperty]
         private string newDirectoryPath = string.Empty;
@@ -74,7 +78,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private System.Timers.Timer? _autoScanTimer;
         private System.Timers.Timer? _infoBarTimer;
 
-        public MainViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService)
+        public MainWindowViewModel(DirectoryService directoryService, ComparisonService comparisonService, ExportService exportService)
         {
             _directoryService = directoryService;
             _comparisonService = comparisonService;
@@ -89,6 +93,245 @@ namespace ReleaseTrackerWpf.ViewModels
             // Setup auto-scan timer
             SetupAutoScanTimer();
         }
+
+        #region Commands
+
+        [RelayCommand]
+        private async Task AddSnapshotAsync()
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "フォルダを選択してスナップショットに追加"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await ScanAndSaveSnapshotAsync(dialog.FolderName);
+            }
+        }
+
+        #endregion
+
+
+        #region Private Methods
+
+        private async Task ScanAndSaveSnapshotAsync(string directoryPath)
+        {
+            try
+            {
+                IsProcessing = true;
+                StatusMessage = "スナップショットを作成中...";
+                
+                // プログレス付きInfoBarを表示
+                Debug.WriteLine("Showing progress InfoBar: スナップショットを作成中...");
+                ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
+
+                var snapshot = await _directoryService.ScanDirectoryAsync(directoryPath);
+                var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                var filePath = Path.Combine(SnapshotsDirectory, fileName);
+
+                await _directoryService.SaveSnapshotAsync(snapshot, filePath);
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _ = LoadAvailableSnapshotsAsync();
+                    StatusMessage = "スナップショットを作成しました";
+                    
+                    // 完了InfoBarを表示（24時間表示）
+                    Debug.WriteLine("Showing completion InfoBar: スナップショットを作成しました");
+                    ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
+                });
+            }
+            catch (Exception ex)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    System.Windows.MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    StatusMessage = "エラーが発生しました";
+                    
+                    // エラーInfoBarを表示
+                    ShowInfoBar("エラー", "エラーが発生しました", 0);
+                });
+            }
+            finally
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Debug.WriteLine("Setting IsProcessing = false in ScanAndSaveSnapshotAsync finally block");
+                    IsProcessing = false;
+                });
+            }
+        }
+
+        private async Task LoadAvailableSnapshotsAsync()
+        {
+            // 現在選択されているスナップショットの情報を保存
+            var currentSelection = SelectedOldSnapshot;
+            var currentSelectionKey = currentSelection != null 
+                ? $"{currentSelection.RootPath}_{currentSelection.CreatedAt:yyyyMMdd_HHmmss}" 
+                : null;
+
+            AvailableSnapshots.Clear();
+
+            if (!Directory.Exists(SnapshotsDirectory))
+            {
+                OnPropertyChanged(nameof(HasSnapshots));
+                OnPropertyChanged(nameof(HasNoSnapshots));
+                return;
+            }
+
+            var jsonFiles = Directory.GetFiles(SnapshotsDirectory, "*.json")
+                .OrderByDescending(f => File.GetCreationTime(f));
+
+            var loadedSnapshots = new HashSet<string>(); // 重複を防ぐためのセット
+            DirectorySnapshot? restoredSelection = null;
+
+            foreach (var file in jsonFiles)
+            {
+                try
+                {
+                    var snapshot = await _directoryService.LoadSnapshotAsync(file);
+                    
+                    // 同じパスと作成日時のスナップショットが既に読み込まれていないかチェック
+                    var snapshotKey = $"{snapshot.RootPath}_{snapshot.CreatedAt:yyyyMMdd_HHmmss}";
+                    if (!loadedSnapshots.Contains(snapshotKey))
+                    {
+                        loadedSnapshots.Add(snapshotKey);
+                        AvailableSnapshots.Add(snapshot);
+
+                        // 以前選択されていたスナップショットと同じものを復元
+                        if (currentSelectionKey != null && snapshotKey == currentSelectionKey)
+                        {
+                            restoredSelection = snapshot;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Skip corrupted files and log the error
+                    System.Diagnostics.Debug.WriteLine($"Failed to load snapshot {file}: {ex.Message}");
+                }
+            }
+
+            // 選択を復元
+            if (restoredSelection != null)
+            {
+                SelectedOldSnapshot = restoredSelection;
+            }
+
+            OnPropertyChanged(nameof(HasSnapshots));
+            OnPropertyChanged(nameof(HasNoSnapshots));
+        }
+
+        #endregion
+
+
+        #region Utility Methods
+
+        /// <summary>
+        /// プログレス付きInfoBarを表示します
+        /// </summary>
+        /// <param name="title">タイトル</param>
+        /// <param name="message">メッセージ</param>
+        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
+        public void ShowProgressInfoBar(string title, string message, int timeoutSeconds = 0)
+        {
+            Debug.WriteLine($"ShowProgressInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // 既存のタイマーがあればクリア
+                _infoBarTimer?.Dispose();
+
+                // InfoBarの設定（プログレス表示用のメッセージに変更）
+                InfoBarTitle = title;
+                InfoBarMessage = $"🔄 {message}";
+                InfoBarSeverity = InfoBarSeverity.Informational;
+
+                // InfoBarを表示
+                IsInfoBarOpen = true;
+
+                // タイムアウトが設定されている場合
+                if (timeoutSeconds > 0)
+                {
+                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
+                    _infoBarTimer.Elapsed += (s, e) =>
+                    {
+                        _infoBarTimer.Stop();
+                        _infoBarTimer.Dispose();
+                        _infoBarTimer = null;
+                        
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            IsInfoBarOpen = false;
+                        });
+                    };
+                    _infoBarTimer.Start();
+                }
+            });
+        }
+
+        /// <summary>
+        /// InfoBarを表示します
+        /// </summary>
+        /// <param name="title">タイトル</param>
+        /// <param name="message">メッセージ</param>
+        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
+        public void ShowInfoBar(string title, string message, int timeoutSeconds = 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"ShowInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // 既存のタイマーがあればクリア
+                _infoBarTimer?.Dispose();
+
+                // InfoBarの設定
+                InfoBarTitle = title;
+                InfoBarMessage = message;
+
+                // メッセージ内容に応じてSeverityを設定
+                if (message.Contains("エラー") || title.Contains("エラー"))
+                {
+                    InfoBarSeverity = InfoBarSeverity.Error;
+                }
+                else if (message.Contains("完了") || title.Contains("完了") || title.Contains("通知"))
+                {
+                    InfoBarSeverity = InfoBarSeverity.Success;
+                }
+                else if (message.Contains("処理中") || title.Contains("処理中"))
+                {
+                    InfoBarSeverity = InfoBarSeverity.Informational;
+                }
+                else
+                {
+                    InfoBarSeverity = InfoBarSeverity.Informational;
+                }
+
+                // InfoBarを表示
+                IsInfoBarOpen = true;
+
+                // タイムアウトが設定されている場合
+                if (timeoutSeconds > 0)
+                {
+                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
+                    _infoBarTimer.Elapsed += (s, e) =>
+                    {
+                        _infoBarTimer.Stop();
+                        _infoBarTimer.Dispose();
+                        _infoBarTimer = null;
+                        
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            IsInfoBarOpen = false;
+                        });
+                    };
+                    _infoBarTimer.Start();
+                }
+            });
+        }
+
+        #endregion
 
 
         partial void OnNewDirectoryPathChanged(string value)
@@ -142,20 +385,6 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
-        private async Task ScanAndAddNewStructure()
-        {
-            var dialog = new OpenFolderDialog
-            {
-                Title = "新構造のフォルダを選択してスナップショットに追加"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                await ScanAndSaveSnapshotAsync(dialog.FolderName);
-            }
-        }
-
-        [RelayCommand]
         private async Task CreateNewSnapshot()
         {
             var dialog = new OpenFolderDialog
@@ -166,54 +395,6 @@ namespace ReleaseTrackerWpf.ViewModels
             if (dialog.ShowDialog() == true)
             {
                 await ScanAndSaveSnapshotAsync(dialog.FolderName);
-            }
-        }
-
-        private async Task ScanAndSaveSnapshotAsync(string directoryPath)
-        {
-            try
-            {
-                IsProcessing = true;
-                StatusMessage = "スナップショットを作成中...";
-                
-                // プログレス付きInfoBarを表示
-                System.Diagnostics.Debug.WriteLine("Showing progress InfoBar: スナップショットを作成中...");
-                ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
-
-                var snapshot = await _directoryService.ScanDirectoryAsync(directoryPath);
-                var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-                var filePath = Path.Combine(SnapshotsDirectory, fileName);
-
-                await _directoryService.SaveSnapshotAsync(snapshot, filePath);
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    _ = LoadAvailableSnapshotsAsync();
-                    StatusMessage = "スナップショットを作成しました";
-                    
-                    // 完了InfoBarを表示（24時間表示）
-                    System.Diagnostics.Debug.WriteLine("Showing completion InfoBar: スナップショットを作成しました");
-                    ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
-                });
-            }
-            catch (Exception ex)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Windows.MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
-                    
-                    // エラーInfoBarを表示
-                    ShowInfoBar("エラー", "エラーが発生しました", 0);
-                });
-            }
-            finally
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    System.Diagnostics.Debug.WriteLine("Setting IsProcessing = false in ScanAndSaveSnapshotAsync finally block");
-                    IsProcessing = false;
-                });
             }
         }
 
@@ -573,66 +754,6 @@ namespace ReleaseTrackerWpf.ViewModels
             return Task.CompletedTask;
         }
 
-        private async Task LoadAvailableSnapshotsAsync()
-        {
-            // 現在選択されているスナップショットの情報を保存
-            var currentSelection = SelectedOldSnapshot;
-            var currentSelectionKey = currentSelection != null 
-                ? $"{currentSelection.RootPath}_{currentSelection.CreatedAt:yyyyMMdd_HHmmss}" 
-                : null;
-
-            AvailableSnapshots.Clear();
-
-            if (!Directory.Exists(SnapshotsDirectory))
-            {
-                OnPropertyChanged(nameof(HasSnapshots));
-                OnPropertyChanged(nameof(HasNoSnapshots));
-                return;
-            }
-
-            var jsonFiles = Directory.GetFiles(SnapshotsDirectory, "*.json")
-                .OrderByDescending(f => File.GetCreationTime(f));
-
-            var loadedSnapshots = new HashSet<string>(); // 重複を防ぐためのセット
-            DirectorySnapshot? restoredSelection = null;
-
-            foreach (var file in jsonFiles)
-            {
-                try
-                {
-                    var snapshot = await _directoryService.LoadSnapshotAsync(file);
-                    
-                    // 同じパスと作成日時のスナップショットが既に読み込まれていないかチェック
-                    var snapshotKey = $"{snapshot.RootPath}_{snapshot.CreatedAt:yyyyMMdd_HHmmss}";
-                    if (!loadedSnapshots.Contains(snapshotKey))
-                    {
-                        loadedSnapshots.Add(snapshotKey);
-                        AvailableSnapshots.Add(snapshot);
-
-                        // 以前選択されていたスナップショットと同じものを復元
-                        if (currentSelectionKey != null && snapshotKey == currentSelectionKey)
-                        {
-                            restoredSelection = snapshot;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Skip corrupted files and log the error
-                    System.Diagnostics.Debug.WriteLine($"Failed to load snapshot {file}: {ex.Message}");
-                }
-            }
-
-            // 選択を復元
-            if (restoredSelection != null)
-            {
-                SelectedOldSnapshot = restoredSelection;
-            }
-
-            OnPropertyChanged(nameof(HasSnapshots));
-            OnPropertyChanged(nameof(HasNoSnapshots));
-        }
-
         partial void OnSelectedOldSnapshotChanged(DirectorySnapshot? value)
         {
             if (value != null && SelectedNewSnapshot != null)
@@ -656,109 +777,6 @@ namespace ReleaseTrackerWpf.ViewModels
 
             // Reload snapshots from new directory
             _ = LoadAvailableSnapshotsAsync();
-        }
-
-        /// <summary>
-        /// InfoBarを表示します
-        /// </summary>
-        /// <param name="title">タイトル</param>
-        /// <param name="message">メッセージ</param>
-        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
-        public void ShowInfoBar(string title, string message, int timeoutSeconds = 0)
-        {
-            System.Diagnostics.Debug.WriteLine($"ShowInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                // 既存のタイマーがあればクリア
-                _infoBarTimer?.Dispose();
-
-                // InfoBarの設定
-                InfoBarTitle = title;
-                InfoBarMessage = message;
-
-                // メッセージ内容に応じてSeverityを設定
-                if (message.Contains("エラー") || title.Contains("エラー"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Error;
-                }
-                else if (message.Contains("完了") || title.Contains("完了") || title.Contains("通知"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Success;
-                }
-                else if (message.Contains("処理中") || title.Contains("処理中"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Informational;
-                }
-                else
-                {
-                    InfoBarSeverity = InfoBarSeverity.Informational;
-                }
-
-                // InfoBarを表示
-                IsInfoBarOpen = true;
-
-                // タイムアウトが設定されている場合
-                if (timeoutSeconds > 0)
-                {
-                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
-                    _infoBarTimer.Elapsed += (s, e) =>
-                    {
-                        _infoBarTimer.Stop();
-                        _infoBarTimer.Dispose();
-                        _infoBarTimer = null;
-                        
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            IsInfoBarOpen = false;
-                        });
-                    };
-                    _infoBarTimer.Start();
-                }
-            });
-        }
-
-        /// <summary>
-        /// プログレス付きInfoBarを表示します
-        /// </summary>
-        /// <param name="title">タイトル</param>
-        /// <param name="message">メッセージ</param>
-        /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
-        public void ShowProgressInfoBar(string title, string message, int timeoutSeconds = 0)
-        {
-            System.Diagnostics.Debug.WriteLine($"ShowProgressInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                // 既存のタイマーがあればクリア
-                _infoBarTimer?.Dispose();
-
-                // InfoBarの設定（プログレス表示用のメッセージに変更）
-                InfoBarTitle = title;
-                InfoBarMessage = $"🔄 {message}";
-                InfoBarSeverity = InfoBarSeverity.Informational;
-
-                // InfoBarを表示
-                IsInfoBarOpen = true;
-
-                // タイムアウトが設定されている場合
-                if (timeoutSeconds > 0)
-                {
-                    _infoBarTimer = new System.Timers.Timer(timeoutSeconds * 1000);
-                    _infoBarTimer.Elapsed += (s, e) =>
-                    {
-                        _infoBarTimer.Stop();
-                        _infoBarTimer.Dispose();
-                        _infoBarTimer = null;
-                        
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            IsInfoBarOpen = false;
-                        });
-                    };
-                    _infoBarTimer.Start();
-                }
-            });
         }
     }
 }

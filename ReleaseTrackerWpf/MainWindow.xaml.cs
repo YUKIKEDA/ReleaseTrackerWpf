@@ -17,7 +17,7 @@ namespace ReleaseTrackerWpf
             var exportService = new ExportService();
 
             // Set DataContext
-            var viewModel = new MainViewModel(directoryService, comparisonService, exportService);
+            var viewModel = new MainWindowViewModel(directoryService, comparisonService, exportService);
             DataContext = viewModel;
         }
 
