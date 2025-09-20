@@ -94,21 +94,15 @@ namespace ReleaseTrackerWpf.ViewModels
 
                     await _snapshotRepository.SaveSnapshotAsync(snapshot, filePath);
 
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        _ = LoadAvailableSnapshotsAsync(settings.SnapshotsDirectory);
-                        
-                        // 完了InfoBarを表示（24時間表示）
-                        _notificationService.ShowInfoBar("通知", "スナップショットを作成しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
-                    });
+                    await LoadAvailableSnapshotsAsync(settings.SnapshotsDirectory);
+
+                    // 完了InfoBarを表示（24時間表示）
+                    _notificationService.ShowInfoBar("通知", "スナップショットを作成しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                 }
                 catch (Exception ex)
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {                        
-                        // エラーInfoBarを表示
-                        _notificationService.ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
-                    });
+                    // エラーInfoBarを表示
+                    _notificationService.ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
             }
         }

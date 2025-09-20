@@ -5,12 +5,15 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Repositories;
+using ReleaseTrackerWpf.Services;
+using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
     public partial class SettingsViewModel : ObservableObject
     {
         private readonly ISettingsRepository _settingsRepository;
+        private readonly INotificationService _notificationService;
 
         #region Observable Properties
 
@@ -25,6 +28,7 @@ namespace ReleaseTrackerWpf.ViewModels
         public SettingsViewModel(SettingsViewModelArgs args)
         {
             _settingsRepository = args.SettingsRepository;
+            _notificationService = args.NotificationService;
         }
 
         #region Commands
@@ -60,6 +64,11 @@ namespace ReleaseTrackerWpf.ViewModels
             if (Directory.Exists(SnapshotsDirectory))
             {
                 Process.Start("explorer.exe", SnapshotsDirectory);
+            }
+            else
+            {
+                // スナップショット保存先フォルダが存在しない場合はInfoBarを表示
+                _notificationService.ShowInfoBar("警告", "スナップショット保存先フォルダが存在しません。", InfoBarSeverity.Warning, 5);
             }
         }
 

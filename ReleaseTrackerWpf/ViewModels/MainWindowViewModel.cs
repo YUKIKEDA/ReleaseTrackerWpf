@@ -47,7 +47,10 @@ namespace ReleaseTrackerWpf.ViewModels
             );
             ComparisonViewModel = new ComparisonViewModel(comparisonArgs);
 
-            var settingsArgs = new SettingsViewModelArgs(args.SettingsRepository);
+            var settingsArgs = new SettingsViewModelArgs(
+                args.SettingsRepository, 
+                args.NotificationService
+            );
             SettingsViewModel = new SettingsViewModel(settingsArgs);
 
             // NotificationServiceの変更を監視
