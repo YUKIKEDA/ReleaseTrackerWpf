@@ -11,5 +11,6 @@ namespace ReleaseTrackerWpf.Models
         ComparisonService ComparisonService,
         ExportService ExportService,
         INotificationService NotificationService,
-        ISettingsRepository SettingsRepository);
+        ISettingsRepository SettingsRepository,
+        ISnapshotRepository SnapshotRepository);
 }

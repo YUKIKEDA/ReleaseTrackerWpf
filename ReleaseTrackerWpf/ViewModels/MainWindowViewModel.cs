@@ -42,7 +42,8 @@ namespace ReleaseTrackerWpf.ViewModels
                 args.ComparisonService, 
                 args.ExportService, 
                 args.NotificationService, 
-                args.SettingsRepository
+                args.SettingsRepository,
+                args.SnapshotRepository
             );
             ComparisonViewModel = new ComparisonViewModel(comparisonArgs);
 

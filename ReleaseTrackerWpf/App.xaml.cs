@@ -15,11 +15,14 @@ namespace ReleaseTrackerWpf
         {
             base.OnStartup(e);
 
+            // リポジトリの初期化
+            var settingsRepository = new SettingsRepository();
+            var snapshotRepository = new SnapshotRepository();
+
             // サービスの初期化
             var directoryService = new DirectoryService();
             var comparisonService = new ComparisonService();
             var exportService = new ExportService();
-            var settingsRepository = new SettingsRepository();
             var notificationService = new NotificationService();
 
             // DTOクラスで依存関係をまとめる
@@ -28,7 +31,9 @@ namespace ReleaseTrackerWpf
                 comparisonService, 
                 exportService, 
                 settingsRepository, 
-                notificationService);
+                notificationService,
+                snapshotRepository
+            );
 
             // ViewModelの初期化
             var mainWindowViewModel = new MainWindowViewModel(args);

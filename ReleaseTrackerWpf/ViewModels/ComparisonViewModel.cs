@@ -18,6 +18,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly ExportService _exportService;
         private readonly INotificationService _notificationService;
         private readonly ISettingsRepository _settingsRepository;
+        private readonly ISnapshotRepository _snapshotRepository;
 
         #region Observable Properties
 
@@ -54,6 +55,7 @@ namespace ReleaseTrackerWpf.ViewModels
             _exportService = args.ExportService;
             _notificationService = args.NotificationService;
             _settingsRepository = args.SettingsRepository;
+            _snapshotRepository = args.SnapshotRepository;
 
             // NotificationServiceの変更を監視
             _notificationService.NotificationChanged += OnNotificationChanged;
@@ -90,7 +92,7 @@ namespace ReleaseTrackerWpf.ViewModels
                     var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, DateTime.Now);
                     var filePath = Path.Combine(settings.SnapshotsDirectory, fileName);
 
-                    await _directoryService.SaveSnapshotAsync(snapshot, filePath);
+                    await _snapshotRepository.SaveSnapshotAsync(snapshot, filePath);
 
                     Application.Current.Dispatcher.Invoke(() =>
                     {
@@ -149,7 +151,7 @@ namespace ReleaseTrackerWpf.ViewModels
             var snapshotFiles = Directory.GetFiles(settings.SnapshotsDirectory, DirectorySnapshot.SnapshotFilePattern);
             foreach (var snapshotFile in snapshotFiles)
             {
-                var snapshot = await _directoryService.LoadSnapshotAsync(snapshotFile);
+                var snapshot = await _snapshotRepository.LoadSnapshotAsync(snapshotFile);
                 AvailableSnapshots.Add(snapshot);
             }
         }
