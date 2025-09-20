@@ -8,31 +8,6 @@ namespace ReleaseTrackerWpf.Services
     public interface INotificationService
     {
         /// <summary>
-        /// InfoBarが開いているかどうか
-        /// </summary>
-        bool IsInfoBarOpen { get; }
-
-        /// <summary>
-        /// InfoBarのタイトル
-        /// </summary>
-        string InfoBarTitle { get; }
-
-        /// <summary>
-        /// InfoBarのメッセージ
-        /// </summary>
-        string InfoBarMessage { get; }
-
-        /// <summary>
-        /// InfoBarの重要度
-        /// </summary>
-        InfoBarSeverity InfoBarSeverity { get; }
-
-        /// <summary>
-        /// InfoBarの状態が変更された時のイベント
-        /// </summary>
-        event EventHandler<NotificationEventArgs>? NotificationChanged;
-
-        /// <summary>
         /// プログレス付きInfoBarを表示します
         /// </summary>
         /// <param name="title">タイトル</param>
@@ -53,16 +28,5 @@ namespace ReleaseTrackerWpf.Services
         /// InfoBarを閉じます
         /// </summary>
         void CloseInfoBar();
-    }
-
-    /// <summary>
-    /// 通知イベントの引数
-    /// </summary>
-    public class NotificationEventArgs : EventArgs
-    {
-        public bool IsOpen { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public InfoBarSeverity Severity { get; set; } = InfoBarSeverity.Informational;
     }
 }

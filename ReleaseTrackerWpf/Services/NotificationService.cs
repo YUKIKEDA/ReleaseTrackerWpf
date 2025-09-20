@@ -1,4 +1,6 @@
 using System.Windows;
+using CommunityToolkit.Mvvm.Messaging;
+using ReleaseTrackerWpf.Models;
 using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf.Services
@@ -9,17 +11,6 @@ namespace ReleaseTrackerWpf.Services
     public class NotificationService : INotificationService
     {
         private System.Timers.Timer? _infoBarTimer;
-
-        #region INotificationService Implementation
-
-        public bool IsInfoBarOpen { get; private set; }
-        public string InfoBarTitle { get; private set; } = string.Empty;
-        public string InfoBarMessage { get; private set; } = string.Empty;
-        public InfoBarSeverity InfoBarSeverity { get; private set; } = InfoBarSeverity.Informational;
-
-        public event EventHandler<NotificationEventArgs>? NotificationChanged;
-
-        #endregion
 
         /// <summary>
         /// プログレス付きInfoBarを表示します
@@ -34,20 +25,9 @@ namespace ReleaseTrackerWpf.Services
                 // 既存のタイマーがあればクリア
                 _infoBarTimer?.Dispose();
 
-                // InfoBarの設定（プログレス表示用のメッセージに変更）
-                InfoBarTitle = title;
-                InfoBarMessage = $"🔄 {message}";
-                InfoBarSeverity = InfoBarSeverity.Informational;
-                IsInfoBarOpen = true;
-
-                // 通知イベントを発火
-                NotificationChanged?.Invoke(this, new NotificationEventArgs
-                {
-                    IsOpen = IsInfoBarOpen,
-                    Title = InfoBarTitle,
-                    Message = InfoBarMessage,
-                    Severity = InfoBarSeverity
-                });
+                // Messengerで通知を送信
+                WeakReferenceMessenger.Default.Send(new NotificationMessage(
+                    true, title, $"🔄 {message}", InfoBarSeverity.Informational));
 
                 // タイムアウトが設定されている場合
                 if (timeoutSeconds > 0)
@@ -83,20 +63,9 @@ namespace ReleaseTrackerWpf.Services
                 // 既存のタイマーがあればクリア
                 _infoBarTimer?.Dispose();
 
-                // InfoBarの設定
-                InfoBarTitle = title;
-                InfoBarMessage = message;
-                InfoBarSeverity = severity;
-                IsInfoBarOpen = true;
-
-                // 通知イベントを発火
-                NotificationChanged?.Invoke(this, new NotificationEventArgs
-                {
-                    IsOpen = IsInfoBarOpen,
-                    Title = InfoBarTitle,
-                    Message = InfoBarMessage,
-                    Severity = InfoBarSeverity
-                });
+                // Messengerで通知を送信
+                WeakReferenceMessenger.Default.Send(new NotificationMessage(
+                    true, title, message, severity));
 
                 // タイムアウトが設定されている場合
                 if (timeoutSeconds > 0)
@@ -128,19 +97,9 @@ namespace ReleaseTrackerWpf.Services
                 _infoBarTimer?.Dispose();
                 _infoBarTimer = null;
 
-                IsInfoBarOpen = false;
-                InfoBarTitle = string.Empty;
-                InfoBarMessage = string.Empty;
-                InfoBarSeverity = InfoBarSeverity.Informational;
-
-                // 通知イベントを発火
-                NotificationChanged?.Invoke(this, new NotificationEventArgs
-                {
-                    IsOpen = IsInfoBarOpen,
-                    Title = InfoBarTitle,
-                    Message = InfoBarMessage,
-                    Severity = InfoBarSeverity
-                });
+                // Messengerで通知を送信
+                WeakReferenceMessenger.Default.Send(new NotificationMessage(
+                    false, string.Empty, string.Empty, InfoBarSeverity.Informational));
             });
         }
     }

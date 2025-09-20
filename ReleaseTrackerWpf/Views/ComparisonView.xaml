@@ -164,7 +164,7 @@
                     <StackPanel Margin="20,0,0,0" Orientation="Horizontal">
                         <ui:Button
                             Margin="0,0,5,0"
-                            Command="{Binding ScanAndCompareDirectoryAsync}"
+                            Command="{Binding CompareDirectoryCommand}"
                             Content="スキャン実行" />
                         <ui:Button
                             Margin="5,0,5,0"
@@ -182,7 +182,8 @@
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,5,0"
-                    ItemsSource="{Binding OldDisplayedDirectoryStructure}">
+                    ItemsSource="{Binding OldDisplayedDirectoryStructure}"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TreeView.Resources>
                         <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
@@ -251,7 +252,8 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    ItemsSource="{Binding NewDisplayedDirectoryStructure}">
+                    ItemsSource="{Binding NewDisplayedDirectoryStructure}"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TreeView.Resources>
                         <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">

@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -27,9 +26,11 @@ namespace ReleaseTrackerWpf.ViewModels
         public ObservableCollection<FileItemViewModel> NewDisplayedDirectoryStructure { get; } = [];
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BothSnapshotsSelected))]
         private DirectorySnapshot? selectedOldSnapshot;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BothSnapshotsSelected))]
         private DirectorySnapshot? selectedNewSnapshot;
 
         #endregion
@@ -38,12 +39,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public bool HasSnapshots => AvailableSnapshots.Count > 0;
         public bool HasNoSnapshots => AvailableSnapshots.Count == 0;
-
-        // InfoBar関連のプロパティ（NotificationServiceから取得）
-        public bool IsInfoBarOpen => _notificationService.IsInfoBarOpen;
-        public string InfoBarTitle => _notificationService.InfoBarTitle;
-        public string InfoBarMessage => _notificationService.InfoBarMessage;
-        public InfoBarSeverity InfoBarSeverity => _notificationService.InfoBarSeverity;
+        public bool BothSnapshotsSelected => SelectedOldSnapshot != null && SelectedNewSnapshot != null;
 
         #endregion
 
@@ -56,18 +52,6 @@ namespace ReleaseTrackerWpf.ViewModels
             _notificationService = args.NotificationService;
             _settingsRepository = args.SettingsRepository;
             _snapshotRepository = args.SnapshotRepository;
-
-            // NotificationServiceの変更を監視
-            _notificationService.NotificationChanged += OnNotificationChanged;
-        }
-
-        private void OnNotificationChanged(object? sender, NotificationEventArgs e)
-        {
-            // プロパティ変更を通知
-            OnPropertyChanged(nameof(IsInfoBarOpen));
-            OnPropertyChanged(nameof(InfoBarTitle));
-            OnPropertyChanged(nameof(InfoBarMessage));
-            OnPropertyChanged(nameof(InfoBarSeverity));
         }
 
         #region Commands

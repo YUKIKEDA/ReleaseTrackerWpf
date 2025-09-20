@@ -1,11 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using ReleaseTrackerWpf.Models;
 using ReleaseTrackerWpf.Services;
 using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
-    public partial class MainWindowViewModel : ObservableObject
+    public partial class MainWindowViewModel : ObservableObject, IRecipient<NotificationMessage>
     {
         private readonly DirectoryScanService _directoryScanService;
         private readonly ComparisonService _comparisonService;
@@ -14,11 +15,17 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #region Observable Properties
 
-        // InfoBar関連のプロパティ（NotificationServiceから取得）
-        public bool IsInfoBarOpen => _notificationService.IsInfoBarOpen;
-        public string InfoBarTitle => _notificationService.InfoBarTitle;
-        public string InfoBarMessage => _notificationService.InfoBarMessage;
-        public InfoBarSeverity InfoBarSeverity => _notificationService.InfoBarSeverity;
+        [ObservableProperty]
+        private bool isInfoBarOpen;
+
+        [ObservableProperty]
+        private string infoBarTitle = string.Empty;
+
+        [ObservableProperty]
+        private string infoBarMessage = string.Empty;
+
+        [ObservableProperty]
+        private InfoBarSeverity infoBarSeverity = InfoBarSeverity.Informational;
 
         #endregion
 
@@ -53,17 +60,16 @@ namespace ReleaseTrackerWpf.ViewModels
             );
             SettingsViewModel = new SettingsViewModel(settingsArgs);
 
-            // NotificationServiceの変更を監視
-            _notificationService.NotificationChanged += OnNotificationChanged;
+            // Messengerに登録
+            WeakReferenceMessenger.Default.Register<NotificationMessage>(this);
         }
 
-        private void OnNotificationChanged(object? sender, NotificationEventArgs e)
+        public void Receive(NotificationMessage message)
         {
-            // プロパティ変更を通知
-            OnPropertyChanged(nameof(IsInfoBarOpen));
-            OnPropertyChanged(nameof(InfoBarTitle));
-            OnPropertyChanged(nameof(InfoBarMessage));
-            OnPropertyChanged(nameof(InfoBarSeverity));
+            IsInfoBarOpen = message.IsOpen;
+            InfoBarTitle = message.Title;
+            InfoBarMessage = message.Message;
+            InfoBarSeverity = message.Severity;
         }
 
         #region Public Methods
