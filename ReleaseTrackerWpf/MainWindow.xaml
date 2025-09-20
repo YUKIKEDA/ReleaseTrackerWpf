@@ -173,7 +173,7 @@
 
                     <!--  Results Area  -->
                     <ui:Card Grid.Row="2" VerticalAlignment="Top">
-                        <Grid>
+                        <Grid Margin="0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -181,7 +181,7 @@
 
                             <StackPanel
                                 Grid.Row="0"
-                                Margin="20,20,20,10"
+                                Margin="0,0,0,10"
                                 Orientation="Horizontal">
                                 <TextBlock
                                     VerticalAlignment="Center"
@@ -201,7 +201,7 @@
                             </StackPanel>
 
                             <views:DiffView Grid.Row="1"
-                                          Margin="20,0,20,20"
+                                          Margin="0"
                                           DataContext="{Binding DiffViewModel}" />
                         </Grid>
                     </ui:Card>
@@ -306,7 +306,7 @@
         <ui:InfoBar
             Grid.Row="2"
             x:Name="NotificationInfoBar"
-            Margin="20,0,20,20"
+            Margin="10,0,10,10"
             Severity="Informational"
             IsOpen="False" />
     </Grid>
