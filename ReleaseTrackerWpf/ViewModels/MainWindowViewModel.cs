@@ -42,11 +42,11 @@ namespace ReleaseTrackerWpf.ViewModels
                 args.ComparisonService, 
                 args.ExportService, 
                 args.NotificationService, 
-                args.SettingsService
+                args.SettingsRepository
             );
             ComparisonViewModel = new ComparisonViewModel(comparisonArgs);
 
-            var settingsArgs = new SettingsViewModelArgs(args.SettingsService);
+            var settingsArgs = new SettingsViewModelArgs(args.SettingsRepository);
             SettingsViewModel = new SettingsViewModel(settingsArgs);
 
             // NotificationServiceの変更を監視

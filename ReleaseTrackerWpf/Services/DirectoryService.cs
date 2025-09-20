@@ -92,7 +92,9 @@ namespace ReleaseTrackerWpf.Services
         public async Task<DirectorySnapshot> LoadSnapshotAsync(string filePath)
         {
             if (!File.Exists(filePath))
+            {
                 throw new FileNotFoundException($"Snapshot file not found: {filePath}");
+            }
 
             var json = await File.ReadAllTextAsync(filePath);
             var snapshot = JsonSerializer.Deserialize<DirectorySnapshot>(json);

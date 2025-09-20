@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
+using ReleaseTrackerWpf.Repositories;
 using ReleaseTrackerWpf.Services;
 using Wpf.Ui.Controls;
 
@@ -16,7 +17,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
         private readonly INotificationService _notificationService;
-        private readonly ISettingsService _settingsService;
+        private readonly ISettingsRepository _settingsRepository;
 
         #region Observable Properties
 
@@ -52,7 +53,7 @@ namespace ReleaseTrackerWpf.ViewModels
             _comparisonService = args.ComparisonService;
             _exportService = args.ExportService;
             _notificationService = args.NotificationService;
-            _settingsService = args.SettingsService;
+            _settingsRepository = args.SettingsRepository;
 
             // NotificationServiceの変更を監視
             _notificationService.NotificationChanged += OnNotificationChanged;
@@ -84,7 +85,7 @@ namespace ReleaseTrackerWpf.ViewModels
                     // プログレス付きInfoBarを表示
                     _notificationService.ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
 
-                    var settings = await _settingsService.LoadSettingsAsync();
+                    var settings = await _settingsRepository.GetAsync();
                     var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
                     var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, DateTime.Now);
                     var filePath = Path.Combine(settings.SnapshotsDirectory, fileName);
@@ -144,7 +145,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public async Task LoadAvailableSnapshotsAsync(string snapshotsDirectory)
         {
-            var settings = await _settingsService.LoadSettingsAsync();
+            var settings = await _settingsRepository.GetAsync();
             var snapshotFiles = Directory.GetFiles(settings.SnapshotsDirectory, DirectorySnapshot.SnapshotFilePattern);
             foreach (var snapshotFile in snapshotFiles)
             {

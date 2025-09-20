@@ -1,9 +1,9 @@
-using ReleaseTrackerWpf.Services;
+using ReleaseTrackerWpf.Repositories;
 
 namespace ReleaseTrackerWpf.Models
 {
     /// <summary>
     /// SettingsViewModelのコンストラクタ引数をまとめるDTOクラス
     /// </summary>
-    public record SettingsViewModelArgs(ISettingsService SettingsService);
+    public record SettingsViewModelArgs(ISettingsRepository SettingsRepository);
 }

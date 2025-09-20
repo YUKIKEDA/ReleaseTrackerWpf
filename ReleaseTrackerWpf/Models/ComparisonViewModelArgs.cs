@@ -1,3 +1,4 @@
+using ReleaseTrackerWpf.Repositories;
 using ReleaseTrackerWpf.Services;
 
 namespace ReleaseTrackerWpf.Models
@@ -10,5 +11,5 @@ namespace ReleaseTrackerWpf.Models
         ComparisonService ComparisonService,
         ExportService ExportService,
         INotificationService NotificationService,
-        ISettingsService SettingsService);
+        ISettingsRepository SettingsRepository);
 }

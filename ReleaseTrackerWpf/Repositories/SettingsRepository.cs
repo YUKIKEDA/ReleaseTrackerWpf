@@ -2,9 +2,9 @@ using System.IO;
 using System.Text.Json;
 using ReleaseTrackerWpf.Models;
 
-namespace ReleaseTrackerWpf.Services
+namespace ReleaseTrackerWpf.Repositories
 {
-    public class SettingsService : ISettingsService
+    public class SettingsRepository : ISettingsRepository
     {
         public const string SettingsDirectoryName = "ReleaseTracker";
         public const string SettingsFileName = "settings.json";
@@ -13,12 +13,12 @@ namespace ReleaseTrackerWpf.Services
         private static readonly string _settingsDirectoryPath = Path.Combine(_appDataPath, SettingsDirectoryName);
         private static readonly string _settingsFilePath = Path.Combine(_settingsDirectoryPath, SettingsFileName);
 
-        public SettingsService()
+        public SettingsRepository()
         {
             Directory.CreateDirectory(_settingsDirectoryPath);
         }
 
-        public async Task<SettingsData> LoadSettingsAsync()
+        public async Task<SettingsData> GetAsync()
         {
             try
             {
@@ -39,7 +39,7 @@ namespace ReleaseTrackerWpf.Services
             }
         }
 
-        public async Task SaveSettingsAsync(SettingsData settings)
+        public async Task SaveAsync(SettingsData settings)
         {
             try
             {

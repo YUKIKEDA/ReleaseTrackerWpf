@@ -4,13 +4,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ReleaseTrackerWpf.Models;
-using ReleaseTrackerWpf.Services;
+using ReleaseTrackerWpf.Repositories;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
     public partial class SettingsViewModel : ObservableObject
     {
-        private readonly ISettingsService _settingsService;
+        private readonly ISettingsRepository _settingsRepository;
 
         #region Observable Properties
 
@@ -24,13 +24,13 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public SettingsViewModel(SettingsViewModelArgs args)
         {
-            _settingsService = args.SettingsService;
+            _settingsRepository = args.SettingsRepository;
         }
 
         #region Commands
 
         [RelayCommand]
-        private void ChangeSnapshotsFolder()
+        private async Task ChangeSnapshotsFolder()
         {
             var dialog = new OpenFileDialog
             {
@@ -48,7 +48,8 @@ namespace ReleaseTrackerWpf.ViewModels
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     SnapshotsDirectory = selectedPath;
-                    _ = SaveSettingsAsync();
+                    var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled);
+                    await _settingsRepository.SaveAsync(settings);
                 }
             }
         }
@@ -64,37 +65,14 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
-        #region Private Methods
-
-        private async Task SaveSettingsAsync()
-        {
-            var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled);
-            await _settingsService.SaveSettingsAsync(settings);
-        }
-
-        #endregion
 
         #region Public Methods
 
         public async Task LoadSettingsAsync()
         {
-            var settings = await _settingsService.LoadSettingsAsync();
+            var settings = await _settingsRepository.GetAsync();
             SnapshotsDirectory = settings.SnapshotsDirectory;
             AutoScanEnabled = settings.AutoScanEnabled;
-        }
-
-        #endregion
-
-        #region Property Changed Handlers
-
-        partial void OnSnapshotsDirectoryChanged(string value)
-        {
-            _ = SaveSettingsAsync();
-        }
-
-        partial void OnAutoScanEnabledChanged(bool value)
-        {
-            _ = SaveSettingsAsync();
         }
 
         #endregion
