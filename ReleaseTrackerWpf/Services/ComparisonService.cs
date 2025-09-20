@@ -1,6 +1,4 @@
 using ReleaseTrackerWpf.Models;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ReleaseTrackerWpf.Services
 {

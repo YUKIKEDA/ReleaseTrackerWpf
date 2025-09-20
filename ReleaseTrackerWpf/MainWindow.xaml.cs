@@ -1,10 +1,9 @@
-using Microsoft.Win32;
-using ReleaseTrackerWpf.Services;
-using ReleaseTrackerWpf.ViewModels;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
+using Microsoft.Win32;
+using ReleaseTrackerWpf.Services;
+using ReleaseTrackerWpf.ViewModels;
 using Wpf.Ui.Controls;
 
 namespace ReleaseTrackerWpf

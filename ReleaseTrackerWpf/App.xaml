@@ -1,9 +1,10 @@
-﻿<Application x:Class="ReleaseTrackerWpf.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:ReleaseTrackerWpf"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             StartupUri="MainWindow.xaml">
+﻿<Application
+    x:Class="ReleaseTrackerWpf.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:ReleaseTrackerWpf"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -11,8 +12,8 @@
                 <ui:ControlsDictionary />
                 <ResourceDictionary Source="Themes/DesertTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <!-- アプリケーション全体の背景色を設定 -->
+
+            <!--  アプリケーション全体の背景色を設定  -->
             <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#FFFAEF" />
         </ResourceDictionary>
     </Application.Resources>

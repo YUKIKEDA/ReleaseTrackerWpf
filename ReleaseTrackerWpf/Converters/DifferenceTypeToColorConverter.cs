@@ -1,8 +1,7 @@
-using ReleaseTrackerWpf.Models;
-using System;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Converters
 {

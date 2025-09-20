@@ -1,5 +1,4 @@
 using ReleaseTrackerWpf.Models;
-using System.Threading.Tasks;
 
 namespace ReleaseTrackerWpf.Services
 {
