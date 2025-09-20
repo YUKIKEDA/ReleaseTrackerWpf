@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewmodels="clr-namespace:ReleaseTrackerWpf.ViewModels"
+    xmlns:views="clr-namespace:ReleaseTrackerWpf.Views"
     Title="ReleaseTracker"
     Width="1200"
     Height="800"
@@ -199,69 +200,9 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <TreeView
-                                Grid.Row="1"
-                                MaxHeight="400"
-                                Margin="20,0,20,20"
-                                VerticalAlignment="Top"
-                                ItemsSource="{Binding ComparisonResults}">
-                                <TreeView.ItemTemplate>
-                                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <!--  Status Icon with Tooltip  -->
-                                            <ui:SymbolIcon
-                                                Margin="0,0,8,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="12"
-                                                Symbol="Add12"
-                                                ToolTip="追加されたファイル">
-                                                <ui:SymbolIcon.Style>
-                                                    <Style TargetType="ui:SymbolIcon">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding DifferenceType}" Value="Added">
-                                                                <Setter Property="Symbol" Value="Add12" />
-                                                                <Setter Property="Foreground" Value="#007800" />
-                                                                <Setter Property="ToolTip" Value="追加されたファイル" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding DifferenceType}" Value="Deleted">
-                                                                <Setter Property="Symbol" Value="Subtract12" />
-                                                                <Setter Property="Foreground" Value="#B40000" />
-                                                                <Setter Property="ToolTip" Value="削除されたファイル" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding DifferenceType}" Value="Modified">
-                                                                <Setter Property="Symbol" Value="Edit12" />
-                                                                <Setter Property="Foreground" Value="#C86400" />
-                                                                <Setter Property="ToolTip" Value="変更されたファイル" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ui:SymbolIcon.Style>
-                                            </ui:SymbolIcon>
-
-                                            <TextBlock
-                                                VerticalAlignment="Center"
-                                                FontWeight="Bold"
-                                                Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}}"
-                                                Text="{Binding Name}" />
-
-                                            <TextBlock
-                                                Margin="10,0,0,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                Foreground="Gray"
-                                                Text="{Binding DisplaySize}" />
-
-                                            <TextBlock
-                                                Margin="10,0,0,0"
-                                                VerticalAlignment="Center"
-                                                FontStyle="Italic"
-                                                Foreground="DarkBlue"
-                                                Text="{Binding Description}"
-                                                Visibility="{Binding Description, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                        </StackPanel>
-                                    </HierarchicalDataTemplate>
-                                </TreeView.ItemTemplate>
-                            </TreeView>
+                            <views:DiffView Grid.Row="1"
+                                          Margin="20,0,20,20"
+                                          DataContext="{Binding DiffViewModel}" />
                         </Grid>
                     </ui:Card>
                 </Grid>

@@ -51,6 +51,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
         public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = new();
+        public DiffViewModel DiffViewModel { get; } = new();
 
         public bool HasSnapshots => AvailableSnapshots.Count > 0;
         public bool HasNoSnapshots => AvailableSnapshots.Count == 0;
@@ -375,8 +376,12 @@ namespace ReleaseTrackerWpf.ViewModels
                         {
                             ComparisonResults.Add(FileItemViewModel.FromModel(item));
                         }
+
+                        // Update DiffViewModel
+                        DiffViewModel.LoadComparison(SelectedOldSnapshot, SelectedNewSnapshot);
+
                         StatusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
-                        
+
                         // 完了Snackbarを表示（24時間表示）
                         if (_mainWindow != null)
                         {
