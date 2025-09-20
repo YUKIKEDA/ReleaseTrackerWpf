@@ -76,39 +76,8 @@
         </HierarchicalDataTemplate>
     </UserControl.Resources>
 
+    <!-- Side-by-side tree comparison -->
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- Header with statistics only -->
-        <ui:Card Grid.Row="0" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="15,10">
-                <TextBlock Text="差分: " FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <Border Background="#E6FFED" Padding="6,3" Margin="5,0" CornerRadius="3">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="+" Foreground="#28A745" FontWeight="Bold" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding AddedCount}" Foreground="#28A745" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-                <Border Background="#FFEEF0" Padding="6,3" Margin="5,0" CornerRadius="3">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="-" Foreground="#D73A49" FontWeight="Bold" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding DeletedCount}" Foreground="#D73A49" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-                <Border Background="#FFF8E1" Padding="6,3" Margin="5,0" CornerRadius="3">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="~" Foreground="#E36209" FontWeight="Bold" Margin="0,0,3,0"/>
-                        <TextBlock Text="{Binding ModifiedCount}" Foreground="#E36209" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ui:Card>
-
-        <!-- Side-by-side tree comparison -->
-        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="5"/>
@@ -141,6 +110,5 @@
                          BorderThickness="1"
                          BorderBrush="LightGray"/>
             </ScrollViewer>
-        </Grid>
     </Grid>
 </UserControl>
