@@ -19,11 +19,8 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #region Observable Properties
 
-        #endregion
-
-        [ObservableProperty]
-        private string newDirectoryPath = string.Empty;
-
+        public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = [];
+        
         [ObservableProperty]
         private DirectorySnapshot? selectedOldSnapshot;
 
@@ -31,28 +28,10 @@ namespace ReleaseTrackerWpf.ViewModels
         private DirectorySnapshot? selectedNewSnapshot;
 
         [ObservableProperty]
-        private string statusMessage = "準備完了";
-
-        [ObservableProperty]
-        private bool isProcessing = false;
-
-        partial void OnIsProcessingChanged(bool value)
-        {
-            // デバッグ用：IsProcessingの変更をログ出力
-            System.Diagnostics.Debug.WriteLine($"IsProcessing changed: {value}, StatusMessage: '{StatusMessage}'");
-        }
-
-        [ObservableProperty]
-        private bool hasStatusMessage = false;
-
-        [ObservableProperty]
-        private DirectorySnapshot? newSnapshot;
+        private bool autoScanEnabled = false;
 
         [ObservableProperty]
         private string snapshotsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots");
-
-        [ObservableProperty]
-        private bool autoScanEnabled = false;
 
         // InfoBar関連のプロパティ
         [ObservableProperty]
@@ -63,16 +42,28 @@ namespace ReleaseTrackerWpf.ViewModels
 
         [ObservableProperty]
         private string infoBarMessage = string.Empty;
-
+        
         [ObservableProperty]
         private InfoBarSeverity infoBarSeverity = InfoBarSeverity.Informational;
 
-        public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
-        public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = new();
-        public DiffViewModel DiffViewModel { get; } = new();
+        [ObservableProperty]
+        private DirectorySnapshot? newSnapshot;
+
+        [ObservableProperty]
+        private string newDirectoryPath = string.Empty;
+
+        #endregion
+
+
+        #region Properties
 
         public bool HasSnapshots => AvailableSnapshots.Count > 0;
         public bool HasNoSnapshots => AvailableSnapshots.Count == 0;
+
+        #endregion
+
+        public ObservableCollection<FileItemViewModel> ComparisonResults { get; } = new();
+        public DiffViewModel DiffViewModel { get; } = new();
 
         private ComparisonResult? _lastComparisonResult;
         private System.Timers.Timer? _autoScanTimer;
@@ -110,6 +101,177 @@ namespace ReleaseTrackerWpf.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void BrowseFirstTimeDirectory()
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "スキャンするフォルダを選択"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {                        
+                        // プログレス付きInfoBarを表示
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            ShowProgressInfoBar("処理中", "スキャン中...", 0);
+                        });
+
+                        var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
+                        var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                        var filePath = Path.Combine(SnapshotsDirectory, fileName);
+
+                        await _directoryService.SaveSnapshotAsync(snapshot, filePath);
+
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _ = LoadAvailableSnapshotsAsync();
+                            
+                            // 完了InfoBarを表示（24時間表示）
+                            ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            System.Windows.MessageBox.Show($"スキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                            
+                            // エラーInfoBarを表示
+                            ShowInfoBar("エラー", "エラーが発生しました", 0);
+                        });
+                    }
+                });
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportResultsAsync()
+        {
+            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+            {
+                System.Windows.MessageBox.Show("エクスポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "比較結果をエクスポート",
+                Filter = "Excelファイル (*.xlsx)|*.xlsx|CSVファイル (*.csv)|*.csv|テキストファイル (*.txt)|*.txt",
+                DefaultExt = ".xlsx"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var extension = Path.GetExtension(dialog.FileName).ToLower();
+                    switch (extension)
+                    {
+                        case ".xlsx":
+                            await _exportService.ExportToExcelAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
+                            break;
+                        case ".csv":
+                            await _exportService.ExportToCsvAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
+                            break;
+                        case ".txt":
+                            await _exportService.ExportToTextAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportDescriptionsAsync()
+        {
+            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+            {
+                System.Windows.MessageBox.Show("インポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "説明ファイルをインポート",
+                Filter = "CSVファイル (*.csv)|*.csv",
+                CheckFileExists = true
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    Dictionary<string, string> descriptions;
+                    var extension = Path.GetExtension(dialog.FileName).ToLower();
+
+                    descriptions = await _exportService.ImportDescriptionsFromCsvAsync(dialog.FileName);
+
+                    // Update descriptions in comparison results
+                    foreach (var item in _lastComparisonResult.AllDifferences)
+                    {
+                        if (descriptions.TryGetValue(item.RelativePath, out var description))
+                        {
+                            item.Description = description;
+                        }
+                    }
+
+                    // Update ViewModels
+                    foreach (var viewModel in ComparisonResults)
+                    {
+                        if (descriptions.TryGetValue(viewModel.RelativePath, out var description))
+                        {
+                            viewModel.Description = description;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"説明のインポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void ChangeSnapshotsFolder()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "スナップショット保存先フォルダを選択",
+                FileName = "フォルダを選択",
+                Filter = "Folder|*.folder",
+                CheckFileExists = false,
+                CheckPathExists = true
+            };
+
+            var result = dialog.ShowDialog();
+            if (result == true)
+            {
+                var selectedPath = Path.GetDirectoryName(dialog.FileName);
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    SnapshotsDirectory = selectedPath;
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void OpenSnapshotsFolder()
+        {
+            if (Directory.Exists(SnapshotsDirectory))
+            {
+                Process.Start("explorer.exe", SnapshotsDirectory);
+            }
+        }
+
         #endregion
 
 
@@ -118,10 +280,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private async Task ScanAndSaveSnapshotAsync(string directoryPath)
         {
             try
-            {
-                IsProcessing = true;
-                StatusMessage = "スナップショットを作成中...";
-                
+            {                
                 // プログレス付きInfoBarを表示
                 Debug.WriteLine("Showing progress InfoBar: スナップショットを作成中...");
                 ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
@@ -135,7 +294,6 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     _ = LoadAvailableSnapshotsAsync();
-                    StatusMessage = "スナップショットを作成しました";
                     
                     // 完了InfoBarを表示（24時間表示）
                     Debug.WriteLine("Showing completion InfoBar: スナップショットを作成しました");
@@ -147,18 +305,9 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     System.Windows.MessageBox.Show($"スナップショット作成中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
                     
                     // エラーInfoBarを表示
                     ShowInfoBar("エラー", "エラーが発生しました", 0);
-                });
-            }
-            finally
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Debug.WriteLine("Setting IsProcessing = false in ScanAndSaveSnapshotAsync finally block");
-                    IsProcessing = false;
                 });
             }
         }
@@ -333,24 +482,6 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
-
-        partial void OnNewDirectoryPathChanged(string value)
-        {
-            if (AutoScanEnabled && !string.IsNullOrEmpty(value) && Directory.Exists(value))
-            {
-                RestartAutoScanTimer();
-            }
-        }
-
-        partial void OnStatusMessageChanged(string value)
-        {
-            HasStatusMessage = !string.IsNullOrEmpty(value);
-            
-            // デバッグ用：StatusMessageの変更をログ出力
-            System.Diagnostics.Debug.WriteLine($"StatusMessage changed: '{value}', IsProcessing: {IsProcessing}");
-        }
-
-
         private void SetupAutoScanTimer()
         {
             _autoScanTimer = new System.Timers.Timer(2000); // 2 seconds delay
@@ -360,14 +491,6 @@ namespace ReleaseTrackerWpf.ViewModels
                 await ScanNewDirectoryAsync();
                 await CompareDirectoriesAsync();
             };
-        }
-
-        private void RestartAutoScanTimer()
-        {
-            if (_autoScanTimer == null) return;
-
-            _autoScanTimer.Stop();
-            _autoScanTimer.Start();
         }
 
         [RelayCommand]
@@ -398,66 +521,6 @@ namespace ReleaseTrackerWpf.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void BrowseFirstTimeDirectory()
-        {
-            var dialog = new OpenFolderDialog
-            {
-                Title = "初回スキャン用フォルダを選択"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        IsProcessing = true;
-                        StatusMessage = "初回スキャン中...";
-                        
-                        // プログレス付きInfoBarを表示
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            ShowProgressInfoBar("処理中", "初回スキャン中...", 0);
-                        });
-
-                        var snapshot = await _directoryService.ScanDirectoryAsync(dialog.FolderName);
-                        var fileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-                        var filePath = Path.Combine(SnapshotsDirectory, fileName);
-
-                        await _directoryService.SaveSnapshotAsync(snapshot, filePath);
-
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            _ = LoadAvailableSnapshotsAsync();
-                            StatusMessage = "初回スナップショットを作成しました";
-                            
-                            // 完了InfoBarを表示（24時間表示）
-                            ShowInfoBar("通知", "初回スナップショットを作成しました", 86400); // 24時間 = 86400秒
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            System.Windows.MessageBox.Show($"初回スキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                            StatusMessage = "エラーが発生しました";
-                            
-                            // エラーInfoBarを表示
-                            ShowInfoBar("エラー", "エラーが発生しました", 0);
-                        });
-                    }
-                    finally
-                    {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            IsProcessing = false;
-                        });
-                    }
-                });
-            }
-        }
-
         private async Task ScanNewDirectoryAsync()
         {
             if (string.IsNullOrEmpty(NewDirectoryPath) || !Directory.Exists(NewDirectoryPath))
@@ -466,40 +529,27 @@ namespace ReleaseTrackerWpf.ViewModels
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    IsProcessing = true;
-                    StatusMessage = "新構造をスキャン中...";
-                    
+                {                    
                     // プログレス付きInfoBarを表示
-                    ShowProgressInfoBar("処理中", "新構造をスキャン中...", 0);
+                    ShowProgressInfoBar("処理中", "スキャン中...", 0);
                 });
 
                 NewSnapshot = await _directoryService.ScanDirectoryAsync(NewDirectoryPath);
 
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    StatusMessage = "新構造のスキャンが完了しました";
-                    
+                {                    
                     // 完了InfoBarを表示（24時間表示）
-                    ShowInfoBar("通知", "新構造のスキャンが完了しました", 86400); // 24時間 = 86400秒
+                    ShowInfoBar("通知", "スキャンが完了しました", 86400); // 24時間 = 86400秒
                 });
             }
             catch (Exception ex)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    System.Windows.MessageBox.Show($"新構造のスキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
+                    System.Windows.MessageBox.Show($"スキャン中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     
                     // エラーInfoBarを表示
                     ShowInfoBar("エラー", "エラーが発生しました", 0);
-                });
-            }
-            finally
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    IsProcessing = false;
                 });
             }
         }
@@ -512,10 +562,7 @@ namespace ReleaseTrackerWpf.ViewModels
             try
             {
                 Application.Current.Dispatcher.Invoke(() =>
-                {
-                    IsProcessing = true;
-                    StatusMessage = "比較処理中...";
-                    
+                {                    
                     // プログレス付きInfoBarを表示
                     ShowProgressInfoBar("処理中", "比較処理中...", 0);
                 });
@@ -538,10 +585,10 @@ namespace ReleaseTrackerWpf.ViewModels
                         // Update DiffViewModel
                         DiffViewModel.LoadComparison(SelectedOldSnapshot, SelectedNewSnapshot);
 
-                        StatusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
+                        var statusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
 
                         // 完了InfoBarを表示（24時間表示）
-                        ShowInfoBar("通知", StatusMessage, 86400); // 24時間 = 86400秒
+                        ShowInfoBar("通知", statusMessage, 86400); // 24時間 = 86400秒
                     }
                 });
 
@@ -571,169 +618,10 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     System.Windows.MessageBox.Show($"比較処理中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
                     
                     // エラーInfoBarを表示
                     ShowInfoBar("エラー", "エラーが発生しました", 0);
                 });
-            }
-            finally
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    IsProcessing = false;
-                });
-            }
-        }
-
-
-        [RelayCommand]
-        private async Task ExportResultsAsync()
-        {
-            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
-            {
-                System.Windows.MessageBox.Show("エクスポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            var dialog = new SaveFileDialog
-            {
-                Title = "比較結果をエクスポート",
-                Filter = "Excelファイル (*.xlsx)|*.xlsx|CSVファイル (*.csv)|*.csv|テキストファイル (*.txt)|*.txt",
-                DefaultExt = ".xlsx"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                try
-                {
-                    IsProcessing = true;
-                    StatusMessage = "エクスポート中...";
-
-                    var extension = Path.GetExtension(dialog.FileName).ToLower();
-                    switch (extension)
-                    {
-                        case ".xlsx":
-                            await _exportService.ExportToExcelAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
-                            break;
-                        case ".csv":
-                            await _exportService.ExportToCsvAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
-                            break;
-                        case ".txt":
-                            await _exportService.ExportToTextAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
-                            break;
-                    }
-
-                    StatusMessage = "エクスポートが完了しました";
-                }
-                catch (Exception ex)
-                {
-                    System.Windows.MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
-                }
-                finally
-                {
-                    IsProcessing = false;
-                }
-            }
-        }
-
-        [RelayCommand]
-        private async Task ImportDescriptionsAsync()
-        {
-            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
-            {
-                System.Windows.MessageBox.Show("インポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
-
-            var dialog = new OpenFileDialog
-            {
-                Title = "説明ファイルをインポート",
-                Filter = "Excelファイル (*.xlsx)|*.xlsx|CSVファイル (*.csv)|*.csv",
-                CheckFileExists = true
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                try
-                {
-                    IsProcessing = true;
-                    StatusMessage = "説明をインポート中...";
-
-                    Dictionary<string, string> descriptions;
-                    var extension = Path.GetExtension(dialog.FileName).ToLower();
-
-                    if (extension == ".xlsx")
-                    {
-                        descriptions = await _exportService.ImportDescriptionsFromExcelAsync(dialog.FileName);
-                    }
-                    else
-                    {
-                        descriptions = await _exportService.ImportDescriptionsFromCsvAsync(dialog.FileName);
-                    }
-
-                    // Update descriptions in comparison results
-                    foreach (var item in _lastComparisonResult.AllDifferences)
-                    {
-                        if (descriptions.TryGetValue(item.RelativePath, out var description))
-                        {
-                            item.Description = description;
-                        }
-                    }
-
-                    // Update ViewModels
-                    foreach (var viewModel in ComparisonResults)
-                    {
-                        if (descriptions.TryGetValue(viewModel.RelativePath, out var description))
-                        {
-                            viewModel.Description = description;
-                        }
-                    }
-
-                    StatusMessage = $"説明のインポートが完了しました ({descriptions.Count} 件)";
-                }
-                catch (Exception ex)
-                {
-                    System.Windows.MessageBox.Show($"説明のインポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-                    StatusMessage = "エラーが発生しました";
-                }
-                finally
-                {
-                    IsProcessing = false;
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void OpenSnapshotsFolder()
-        {
-            if (Directory.Exists(SnapshotsDirectory))
-            {
-                Process.Start("explorer.exe", SnapshotsDirectory);
-            }
-        }
-
-        [RelayCommand]
-        private void ChangeSnapshotsFolder()
-        {
-            var dialog = new OpenFileDialog
-            {
-                Title = "スナップショット保存先フォルダを選択",
-                FileName = "フォルダを選択",
-                Filter = "Folder|*.folder",
-                CheckFileExists = false,
-                CheckPathExists = true
-            };
-
-            var result = dialog.ShowDialog();
-            if (result == true)
-            {
-                var selectedPath = Path.GetDirectoryName(dialog.FileName);
-                if (!string.IsNullOrEmpty(selectedPath))
-                {
-                    SnapshotsDirectory = selectedPath;
-                }
             }
         }
 
@@ -752,31 +640,6 @@ namespace ReleaseTrackerWpf.ViewModels
             }
             
             return Task.CompletedTask;
-        }
-
-        partial void OnSelectedOldSnapshotChanged(DirectorySnapshot? value)
-        {
-            if (value != null && SelectedNewSnapshot != null)
-            {
-                _ = Task.Run(CompareDirectoriesAsync);
-            }
-        }
-
-        partial void OnSelectedNewSnapshotChanged(DirectorySnapshot? value)
-        {
-            if (value != null && SelectedOldSnapshot != null)
-            {
-                _ = Task.Run(CompareDirectoriesAsync);
-            }
-        }
-
-        partial void OnSnapshotsDirectoryChanged(string value)
-        {
-            // Create new directory if it doesn't exist
-            Directory.CreateDirectory(value);
-
-            // Reload snapshots from new directory
-            _ = LoadAvailableSnapshotsAsync();
         }
     }
 }
