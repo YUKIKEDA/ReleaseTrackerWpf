@@ -36,7 +36,7 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public string DifferenceTypeText => DifferenceType.ToString();
 
-        public static FileItemViewModel FromModel(FileItem item)
+        public static FileItemViewModel FromModel(FileSystemEntry item)
         {
             var viewModel = new FileItemViewModel
             {
@@ -57,9 +57,9 @@ namespace ReleaseTrackerWpf.ViewModels
             return viewModel;
         }
 
-        public FileItem ToModel()
+        public FileSystemEntry ToModel()
         {
-            return new FileItem
+            return new FileSystemEntry
             {
                 Name = Name,
                 RelativePath = RelativePath,

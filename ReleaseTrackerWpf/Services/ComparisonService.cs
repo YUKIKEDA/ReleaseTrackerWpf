@@ -54,7 +54,7 @@ namespace ReleaseTrackerWpf.Services
             return result;
         }
 
-        public (List<FileItem> oldUnionItems, List<FileItem> newUnionItems) CreateUnionStructure(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
+        public (List<FileSystemEntry> oldUnionItems, List<FileSystemEntry> newUnionItems) CreateUnionStructure(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
         {
             var oldItems = FlattenItems(oldSnapshot.Items).ToDictionary(x => x.RelativePath, x => x);
             var newItems = FlattenItems(newSnapshot.Items).ToDictionary(x => x.RelativePath, x => x);
@@ -62,8 +62,8 @@ namespace ReleaseTrackerWpf.Services
             // Get all unique paths from both snapshots
             var allPaths = oldItems.Keys.Union(newItems.Keys).OrderBy(x => x).ToList();
 
-            var oldUnionItems = new List<FileItem>();
-            var newUnionItems = new List<FileItem>();
+            var oldUnionItems = new List<FileSystemEntry>();
+            var newUnionItems = new List<FileSystemEntry>();
 
             foreach (var path in allPaths)
             {
@@ -110,13 +110,13 @@ namespace ReleaseTrackerWpf.Services
             return (BuildHierarchicalStructure(oldUnionItems), BuildHierarchicalStructure(newUnionItems));
         }
 
-        private FileItem CreatePlaceholderItem(string relativePath, bool isDirectory)
+        private FileSystemEntry CreatePlaceholderItem(string relativePath, bool isDirectory)
         {
             var name = Path.GetFileName(relativePath);
             if (string.IsNullOrEmpty(name))
                 name = "Root";
 
-            return new FileItem
+            return new FileSystemEntry
             {
                 Name = name,
                 FullPath = string.Empty,
@@ -124,15 +124,15 @@ namespace ReleaseTrackerWpf.Services
                 IsDirectory = isDirectory,
                 Size = 0,
                 LastWriteTime = DateTime.MinValue,
-                Children = new List<FileItem>(),
+                Children = new List<FileSystemEntry>(),
                 DifferenceType = DifferenceType.None,
                 Description = null
             };
         }
 
-        private List<FileItem> BuildHierarchicalStructure(List<FileItem> flatItems)
+        private List<FileSystemEntry> BuildHierarchicalStructure(List<FileSystemEntry> flatItems)
         {
-            var rootItems = new List<FileItem>();
+            var rootItems = new List<FileSystemEntry>();
             var itemMap = flatItems.ToDictionary(x => x.RelativePath, x => x);
 
             foreach (var item in flatItems)
@@ -161,7 +161,7 @@ namespace ReleaseTrackerWpf.Services
             return rootItems;
         }
 
-        private IEnumerable<FileItem> FlattenItems(IEnumerable<FileItem> items)
+        private IEnumerable<FileSystemEntry> FlattenItems(IEnumerable<FileSystemEntry> items)
         {
             foreach (var item in items)
             {
@@ -173,7 +173,7 @@ namespace ReleaseTrackerWpf.Services
             }
         }
 
-        private bool IsItemModified(FileItem oldItem, FileItem newItem)
+        private bool IsItemModified(FileSystemEntry oldItem, FileSystemEntry newItem)
         {
             if (oldItem.IsDirectory != newItem.IsDirectory)
                 return true;
@@ -188,9 +188,9 @@ namespace ReleaseTrackerWpf.Services
             return false;
         }
 
-        private FileItem CloneFileItem(FileItem original)
+        private FileSystemEntry CloneFileItem(FileSystemEntry original)
         {
-            return new FileItem
+            return new FileSystemEntry
             {
                 Name = original.Name,
                 FullPath = original.FullPath,
@@ -198,7 +198,7 @@ namespace ReleaseTrackerWpf.Services
                 IsDirectory = original.IsDirectory,
                 Size = original.Size,
                 LastWriteTime = original.LastWriteTime,
-                Children = new List<FileItem>(), // Don't clone children for difference items
+                Children = new List<FileSystemEntry>(), // Don't clone children for difference items
                 DifferenceType = original.DifferenceType,
                 Description = original.Description
             };

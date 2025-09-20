@@ -37,7 +37,7 @@ namespace ReleaseTrackerWpf.Models
         private DateTime _createdAt;
 
         [ObservableProperty]
-        private List<FileItem> _items = [];
+        private List<FileSystemEntry> _items = [];
 
         #endregion
     }

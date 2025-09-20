@@ -10,7 +10,7 @@ namespace ReleaseTrackerWpf.Services
 {
     public class ExportService
     {
-        public async Task ExportToExcelAsync(List<FileItem> items, string filePath)
+        public async Task ExportToExcelAsync(List<FileSystemEntry> items, string filePath)
         {
             await Task.Run(() =>
             {
@@ -49,7 +49,7 @@ namespace ReleaseTrackerWpf.Services
             });
         }
 
-        public async Task ExportToCsvAsync(List<FileItem> items, string filePath)
+        public async Task ExportToCsvAsync(List<FileSystemEntry> items, string filePath)
         {
             using var writer = new StringWriter();
             using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -76,7 +76,7 @@ namespace ReleaseTrackerWpf.Services
             await File.WriteAllTextAsync(filePath, writer.ToString(), Encoding.UTF8);
         }
 
-        public async Task ExportToTextAsync(List<FileItem> items, string filePath)
+        public async Task ExportToTextAsync(List<FileSystemEntry> items, string filePath)
         {
             var sb = new StringBuilder();
             sb.AppendLine("Comparison Results");
