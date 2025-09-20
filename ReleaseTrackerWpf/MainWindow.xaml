@@ -304,12 +304,10 @@
 
         <!--  WPF UI InfoBar for notifications (replacing Snackbar)  -->
         <ui:InfoBar
-            Grid.RowSpan="3"
+            Grid.Row="2"
             x:Name="NotificationInfoBar"
-            Margin="20,0,20,20"
-            Panel.ZIndex="1000"
+            Margin="20,10,20,20"
             Severity="Informational"
-            IsOpen="False"
-            VerticalAlignment="Bottom" />
+            IsOpen="False" />
     </Grid>
 </ui:FluentWindow>
