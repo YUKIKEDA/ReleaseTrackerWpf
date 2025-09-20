@@ -30,17 +30,7 @@
         </Grid.RowDefinitions>
 
         <!--  Title Bar  -->
-        <ui:TitleBar
-            Title="ReleaseTracker"
-            Grid.Row="0"
-            Height="28"
-            Background="{StaticResource TitleBarBackgroundBrush}"
-            FontSize="14"
-            FontWeight="Bold">
-            <ui:TitleBar.Icon>
-                <ui:SymbolIcon FontSize="18" Symbol="Home16" />
-            </ui:TitleBar.Icon>
-        </ui:TitleBar>
+        <views:TitleBarView Title="ReleaseTracker" Grid.Row="0" />
 
         <!--  Tab Control  -->
         <TabControl
