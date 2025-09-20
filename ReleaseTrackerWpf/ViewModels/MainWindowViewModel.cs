@@ -113,7 +113,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         _ = LoadAvailableSnapshotsAsync();
                         
                         // 完了InfoBarを表示（24時間表示）
-                        ShowInfoBar("通知", "スナップショットを作成しました", 86400); // 24時間 = 86400秒
+                        ShowInfoBar("通知", "スナップショットを作成しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                     });
                 }
                 catch (Exception ex)
@@ -121,7 +121,7 @@ namespace ReleaseTrackerWpf.ViewModels
                     Application.Current.Dispatcher.Invoke(() =>
                     {                        
                         // エラーInfoBarを表示
-                        ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", 0);
+                        ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                     });
                 }
             }
@@ -131,9 +131,9 @@ namespace ReleaseTrackerWpf.ViewModels
         [RelayCommand]
         private async Task ExportResultsAsync()
         {
-            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+                if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
-                System.Windows.MessageBox.Show("エクスポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                ShowInfoBar("警告", "エクスポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
             }
 
@@ -161,10 +161,13 @@ namespace ReleaseTrackerWpf.ViewModels
                             await _exportService.ExportToTextAsync(_lastComparisonResult.AllDifferences, dialog.FileName);
                             break;
                     }
+                    
+                    // エクスポート成功のInfoBarを表示
+                    ShowInfoBar("通知", "エクスポートが完了しました", InfoBarSeverity.Success, 5);
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
             }
         }
@@ -172,9 +175,9 @@ namespace ReleaseTrackerWpf.ViewModels
         [RelayCommand]
         private async Task ImportDescriptionsAsync()
         {
-            if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
+                if (_lastComparisonResult == null || !_lastComparisonResult.AllDifferences.Any())
             {
-                System.Windows.MessageBox.Show("インポートする比較結果がありません。", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                ShowInfoBar("警告", "インポートする比較結果がありません。", InfoBarSeverity.Warning, 5);
                 return;
             }
 
@@ -211,10 +214,13 @@ namespace ReleaseTrackerWpf.ViewModels
                             viewModel.Description = description;
                         }
                     }
+                    
+                    // インポート成功のInfoBarを表示
+                    ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.MessageBox.Show($"説明のインポート中にエラーが発生しました: {ex.Message}", "エラー", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    ShowInfoBar("エラー", $"説明のインポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
             }
         }
@@ -301,8 +307,8 @@ namespace ReleaseTrackerWpf.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    // Skip corrupted files and log the error
-                    System.Diagnostics.Debug.WriteLine($"Failed to load snapshot {file}: {ex.Message}");
+                    // Skip corrupted files and show warning
+                    ShowInfoBar("警告", $"スナップショットファイルの読み込みに失敗しました: {Path.GetFileName(file)} ({ex.Message})", InfoBarSeverity.Warning, 5);
                 }
             }
 
@@ -329,8 +335,6 @@ namespace ReleaseTrackerWpf.ViewModels
         /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
         public void ShowProgressInfoBar(string title, string message, int timeoutSeconds = 0)
         {
-            Debug.WriteLine($"ShowProgressInfoBar called: Title='{title}', Message='{message}', Timeout={timeoutSeconds}");
-
             Application.Current.Dispatcher.Invoke(() =>
             {
                 // 既存のタイマーがあればクリア
@@ -369,8 +373,9 @@ namespace ReleaseTrackerWpf.ViewModels
         /// </summary>
         /// <param name="title">タイトル</param>
         /// <param name="message">メッセージ</param>
+        /// <param name="severity">InfoBarSeverity</param>
         /// <param name="timeoutSeconds">表示時間（秒、0で無制限）</param>
-        public void ShowInfoBar(string title, string message, int timeoutSeconds = 0)
+        public void ShowInfoBar(string title, string message, InfoBarSeverity severity = InfoBarSeverity.Informational, int timeoutSeconds = 0)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -380,24 +385,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 // InfoBarの設定
                 InfoBarTitle = title;
                 InfoBarMessage = message;
-
-                // メッセージ内容に応じてSeverityを設定
-                if (message.Contains("エラー") || title.Contains("エラー"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Error;
-                }
-                else if (message.Contains("完了") || title.Contains("完了") || title.Contains("通知"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Success;
-                }
-                else if (message.Contains("処理中") || title.Contains("処理中"))
-                {
-                    InfoBarSeverity = InfoBarSeverity.Informational;
-                }
-                else
-                {
-                    InfoBarSeverity = InfoBarSeverity.Informational;
-                }
+                InfoBarSeverity = severity;
 
                 // InfoBarを表示
                 IsInfoBarOpen = true;
@@ -453,7 +441,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // 完了InfoBarを表示（24時間表示）
-                    ShowInfoBar("通知", "スキャンが完了しました", 86400); // 24時間 = 86400秒
+                    ShowInfoBar("通知", "スキャンが完了しました", InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                 });
             }
             catch (Exception ex)
@@ -461,7 +449,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", $"スキャン中にエラーが発生しました: {ex.Message}", 0);
+                    ShowInfoBar("エラー", $"スキャン中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 });
             }
         }
@@ -500,7 +488,7 @@ namespace ReleaseTrackerWpf.ViewModels
                         var statusMessage = $"比較完了: 追加 {_lastComparisonResult.AddedItems.Count}, 削除 {_lastComparisonResult.DeletedItems.Count}, 変更 {_lastComparisonResult.ModifiedItems.Count}";
 
                         // 完了InfoBarを表示（24時間表示）
-                        ShowInfoBar("通知", statusMessage, 86400); // 24時間 = 86400秒
+                        ShowInfoBar("通知", statusMessage, InfoBarSeverity.Success, 86400); // 24時間 = 86400秒
                     }
                 });
 
@@ -530,7 +518,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {                    
                     // エラーInfoBarを表示
-                    ShowInfoBar("エラー", $"比較処理中にエラーが発生しました: {ex.Message}", 0);
+                    ShowInfoBar("エラー", $"比較処理中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 });
             }
         }
