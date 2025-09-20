@@ -38,7 +38,7 @@
             Margin="10"
             Background="{StaticResource ApplicationBackgroundBrush}">
             <!--  Main Tab  -->
-            <TabItem Header="メイン">
+            <TabItem Header="比較">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -61,15 +61,13 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!--  Headers  -->
+                            <!--  Old Header  -->
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
@@ -77,14 +75,6 @@
                                 FontSize="16"
                                 FontWeight="Bold"
                                 Text="比較元"
-                                Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <TextBlock
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                Margin="0,0,0,10"
-                                FontSize="16"
-                                FontWeight="Bold"
-                                Text="比較先"
                                 Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                             <!--  Old Structure Selection  -->
@@ -110,6 +100,16 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                             </StackPanel>
+
+                            <!--  New Header  -->
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="0,0,0,10"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="比較先"
+                                Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                             <!--  New Structure Selection  -->
                             <StackPanel
