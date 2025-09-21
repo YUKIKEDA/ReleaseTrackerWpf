@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Installer Tracker** (ReleaseTrackerWpf) is a WPF desktop application that tracks and compares directory structures of software installation modules between versions. It helps detect unintended file additions, deletions, or changes to improve release quality.
+**ReleaseTrackerWpf** is a WPF desktop application that tracks and compares directory structures of software installation modules between versions. It helps detect unintended file additions, deletions, or changes to improve release quality.
 
 ## Build and Development Commands
 
@@ -24,40 +24,71 @@ dotnet clean ReleaseTrackerWpf.sln
 
 ## Project Architecture
 
-- **Framework**: .NET 8 WPF application using MVVM pattern
+- **Framework**: .NET 8 WPF application using MVVM pattern with dependency injection
 - **UI Framework**: WPF-UI for modern Fluent Design System components
-- **Dependencies**:
-  - `CommunityToolkit.Mvvm` - MVVM pattern implementation
+- **Architecture Pattern**: Clean Architecture with Repository pattern
+- **Key Dependencies**:
+  - `CommunityToolkit.Mvvm` - Modern MVVM implementation with ObservableObject, RelayCommand
   - `ClosedXML` - Excel file export/import (.xlsx)
   - `CsvHelper` - CSV file export/import
-  - `WPF-UI` - Modern UI components
+  - `WPF-UI` - Fluent Design System components (FluentWindow, NavigationView, etc.)
+  - `R3` - Reactive extensions for async operations
 
-## Directory Structure
+## Current Implementation Status
 
-```
-ReleaseTrackerWpf/
-├── Models/          # Data models and entities (placeholder)
-├── ViewModels/      # MVVM ViewModels (placeholder)
-├── Views/           # XAML views and windows (placeholder)
-├── Services/        # Business logic and data services (placeholder)
-├── Converters/      # Value converters for data binding (placeholder)
-├── MainWindow.xaml  # Main application window
-└── App.xaml         # Application entry point
-```
+### ✅ Fully Implemented
+- **Directory Scanning**: `DirectoryScanService` recursively scans directories with error handling
+- **Snapshot Persistence**: `SnapshotRepository` handles JSON serialization of `DirectorySnapshot`
+- **Export/Import**: `ExportService` supports Excel, CSV, and text export with description import
+- **UI Framework**: Complete WPF-UI implementation with tabbed interface and tree views
+- **MVVM Architecture**: Proper ViewModels with dependency injection setup in `App.xaml.cs`
+- **Notifications**: `NotificationService` using Messenger pattern for UI feedback
 
-## Key Features to Implement
+### ❌ Missing Core Functionality
+- **Comparison Logic**: `ComparisonService.CompareAsync()` method is empty - needs implementation
+- **ComparisonResult Model**: Empty class that needs properties for storing comparison results
+- **Display Conversion**: `ComparisonViewModel.CreateCompareResultForDisplay()` method missing
+- **Command Implementations**: Export/Import commands marked as TODO in `ComparisonViewModel`
 
-1. **Directory Structure Scanning**: Recursively scan folders and save snapshots as JSON
-2. **Snapshot Comparison**: Compare old vs new directory structures
-3. **Difference Detection**: Categorize changes as Added, Deleted, or Modified files
-4. **Visual Tree Display**: Show comparison results in tree view with color coding
-5. **Export Functionality**: Export reports to Excel, CSV, and text formats
-6. **Import Descriptions**: Import Excel/CSV files with user-added descriptions
+### 🔄 Partially Implemented
+- **ComparisonViewModel**: Has UI bindings but lacks core comparison logic integration
 
-## Development Notes
+## Key Models and Data Flow
 
-- The project currently contains only basic WPF scaffolding
-- All major functionality folders (Models, ViewModels, Views, Services) are placeholders
-- The application specification is documented in `.dev/requirement.md` (Japanese)
-- Uses modern MVVM patterns with CommunityToolkit.Mvvm
-- UI should follow Fluent Design System principles via WPF-UI
+### Core Models
+- **FileSystemEntry**: Hierarchical file/directory representation with difference tracking
+- **DirectorySnapshot**: Timestamped snapshot with metadata and file naming conventions
+- **DifferenceType**: Enum (None, Added, Deleted, Modified, Unchanged)
+
+### Services Architecture
+- **DirectoryScanService**: Directory traversal with permission handling
+- **ComparisonService**: Core comparison logic (needs implementation)
+- **ExportService**: Multi-format export with description import capability
+- **SnapshotRepository**: JSON persistence layer
+- **NotificationService**: UI messaging via CommunityToolkit.Mvvm.Messaging
+
+### ViewModels Pattern
+- **MainWindowViewModel**: Root coordinator with InfoBar notification handling
+- **ComparisonViewModel**: Main workspace for snapshot selection and comparison
+- **FileItemViewModel**: UI wrapper for FileSystemEntry with tree binding support
+
+## Implementation Priorities
+
+When working on this codebase, focus on these areas in order:
+
+1. **Complete ComparisonService.CompareAsync()**: Implement directory diff algorithm
+2. **Populate ComparisonResult model**: Add properties for storing comparison metadata
+3. **Implement CreateCompareResultForDisplay()**: Convert results to UI-bindable format
+4. **Connect Export/Import commands**: Wire up existing ExportService to ViewModels
+
+## Development Guidelines
+
+- Follow existing MVVM patterns using CommunityToolkit.Mvvm
+- Use dependency injection configured in `App.xaml.cs`
+- Maintain async/await patterns for file operations
+- Handle file system exceptions gracefully (see DirectoryScanService examples)
+- Use WPF-UI components for consistent Fluent Design
+- Color-code differences using existing `DifferenceTypeToColorConverter`
+
+## Sample Data
+The `examples/` directory contains versioned sample directories (v1.0.0, v1.1.0, v2.0.0) for testing comparison functionality.

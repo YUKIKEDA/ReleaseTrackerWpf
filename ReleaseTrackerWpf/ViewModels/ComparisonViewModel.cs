@@ -113,11 +113,13 @@ namespace ReleaseTrackerWpf.ViewModels
                 CreateCompareResultForDisplay(comparisonResult);
 
                 // 完了InfoBarを表示
-                var changeCount = comparisonResult.TotalAddedCount + comparisonResult.TotalDeletedCount + comparisonResult.TotalModifiedCount;
-                var message = changeCount > 0 
-                    ? $"比較が完了しました（{changeCount}個の変更を検出）" 
+                var statistics = comparisonResult.Statistics;
+                var changeCount = statistics.AddedFiles + statistics.DeletedFiles + statistics.ModifiedFiles +
+                                 statistics.AddedDirectories + statistics.DeletedDirectories;
+                var message = changeCount > 0
+                    ? $"比較が完了しました（{changeCount}個の変更を検出）"
                     : "比較が完了しました（変更はありませんでした）";
-                
+
                 _notificationService.ShowInfoBar("通知", message, InfoBarSeverity.Success, 5);
             }
             catch (Exception ex)
@@ -169,7 +171,23 @@ namespace ReleaseTrackerWpf.ViewModels
         /// </summary>
         private void CreateCompareResultForDisplay(ComparisonResult comparisonResult)
         {
-            
+            // 既存の表示データをクリア
+            OldDisplayedDirectoryStructure.Clear();
+            NewDisplayedDirectoryStructure.Clear();
+
+            // 左側（旧ディレクトリ構造）の表示データを作成
+            foreach (var entry in comparisonResult.LeftTreeItems)
+            {
+                var viewModel = FileItemViewModel.FromModel(entry);
+                OldDisplayedDirectoryStructure.Add(viewModel);
+            }
+
+            // 右側（新ディレクトリ構造）の表示データを作成
+            foreach (var entry in comparisonResult.RightTreeItems)
+            {
+                var viewModel = FileItemViewModel.FromModel(entry);
+                NewDisplayedDirectoryStructure.Add(viewModel);
+            }
         }
 
         #endregion

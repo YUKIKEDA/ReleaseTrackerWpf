@@ -13,6 +13,7 @@
 
     <UserControl.Resources>
         <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
+        <converters:DifferenceTypeToForegroundConverter x:Key="DifferenceTypeToForegroundConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:FolderFileIconConverter x:Key="FolderFileIconConverter" />
     </UserControl.Resources>
@@ -193,13 +194,17 @@
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
                                     FontSize="14"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                     Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Name}"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}" />
                                 <TextBlock
                                     Margin="10,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="11"
-                                    Foreground="Gray"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                     Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
                                     Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
                             </StackPanel>
@@ -263,13 +268,17 @@
                                     Margin="0,0,5,0"
                                     VerticalAlignment="Center"
                                     FontSize="14"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                     Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Name}"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}" />
                                 <TextBlock
                                     Margin="10,0,0,0"
                                     VerticalAlignment="Center"
                                     FontSize="11"
-                                    Foreground="Gray"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                     Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
                                     Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
                             </StackPanel>

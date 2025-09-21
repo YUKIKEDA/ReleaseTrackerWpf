@@ -17,15 +17,25 @@ namespace ReleaseTrackerWpf.Converters
                 
                 return differenceType switch
                 {
-                    DifferenceType.Added when side == "left" => new SolidColorBrush(isHover ? Color.FromRgb(250, 250, 250) : Color.FromRgb(244, 244, 244)), // Hover: very light gray, Normal: light gray
-                    DifferenceType.Added when side == "right" => new SolidColorBrush(isHover ? Color.FromRgb(240, 255, 240) : Color.FromRgb(215, 255, 215)), // Hover: very light green, Normal: medium light green
-                    DifferenceType.Deleted when side == "left" => new SolidColorBrush(isHover ? Color.FromRgb(255, 240, 240) : Color.FromRgb(255, 215, 215)), // Hover: very light red, Normal: medium light red
-                    DifferenceType.Deleted when side == "right" => new SolidColorBrush(isHover ? Color.FromRgb(250, 250, 250) : Color.FromRgb(244, 244, 244)), // Hover: very light gray, Normal: light gray
-                    DifferenceType.Modified => new SolidColorBrush(isHover ? Color.FromRgb(255, 250, 240) : Color.FromRgb(255, 240, 215)), // Hover: very light beige, Normal: medium light beige
-                    DifferenceType.Unchanged => new SolidColorBrush(Colors.Transparent), // Transparent background for unchanged
-                    DifferenceType.Added => new SolidColorBrush(isHover ? Color.FromRgb(240, 255, 240) : Color.FromRgb(215, 255, 215)),     // Default
-                    DifferenceType.Deleted => new SolidColorBrush(isHover ? Color.FromRgb(255, 240, 240) : Color.FromRgb(255, 215, 215)),  // Default
-                    _ => new SolidColorBrush(Colors.Transparent)                         // Default transparent
+                    // 追加ファイル：左側グレーアウト、右側グリーン背景
+                    DifferenceType.Added when side == "left" => new SolidColorBrush(isHover ? Color.FromRgb(220, 220, 220) : Color.FromRgb(240, 240, 240)), // グレーアウト（ホバー時濃く）
+                    DifferenceType.Added when side == "right" => new SolidColorBrush(isHover ? Color.FromRgb(210, 255, 210) : Color.FromRgb(230, 255, 230)), // グリーン背景（ホバー時濃く）
+
+                    // 削除ファイル：左側赤背景、右側グレーアウト
+                    DifferenceType.Deleted when side == "left" => new SolidColorBrush(isHover ? Color.FromRgb(255, 210, 210) : Color.FromRgb(255, 230, 230)), // 赤背景（ホバー時濃く）
+                    DifferenceType.Deleted when side == "right" => new SolidColorBrush(isHover ? Color.FromRgb(220, 220, 220) : Color.FromRgb(240, 240, 240)), // グレーアウト（ホバー時濃く）
+
+                    // 変更ファイル：両方オレンジ背景
+                    DifferenceType.Modified => new SolidColorBrush(isHover ? Color.FromRgb(255, 230, 180) : Color.FromRgb(255, 240, 200)), // オレンジ背景（ホバー時濃く）
+
+                    // グレーアウト表示用（DifferenceType.None）
+                    DifferenceType.None => new SolidColorBrush(isHover ? Color.FromRgb(220, 220, 220) : Color.FromRgb(240, 240, 240)), // グレーアウト（ホバー時濃く）
+
+                    // 変更なし：透明背景
+                    DifferenceType.Unchanged => new SolidColorBrush(Colors.Transparent),
+
+                    // デフォルト
+                    _ => new SolidColorBrush(Colors.Transparent)
                 };
             }
 
