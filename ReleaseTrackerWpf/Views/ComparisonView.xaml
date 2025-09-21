@@ -179,12 +179,18 @@
                 </StackPanel>
 
                 <!--  Comparison Results TreeView (Old)  -->
-                <TreeView
+                <ScrollViewer
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,5,0"
-                    ItemsSource="{Binding OldDisplayedDirectoryStructure}"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <TreeView
+                        ItemsSource="{Binding OldDisplayedDirectoryStructure}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
                     <TreeView.Resources>
                         <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
@@ -251,14 +257,21 @@
                         </Style>
                     </TreeView.Style>
                 </TreeView>
+                </ScrollViewer>
 
                 <!--  Comparison Results TreeView (New)  -->
-                <TreeView
+                <ScrollViewer
                     Grid.Row="1"
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    ItemsSource="{Binding NewDisplayedDirectoryStructure}"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
+                    <TreeView
+                        ItemsSource="{Binding NewDisplayedDirectoryStructure}"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
                     <TreeView.Resources>
                         <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
                         <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
@@ -325,6 +338,7 @@
                         </Style>
                     </TreeView.Style>
                 </TreeView>
+                </ScrollViewer>
             </Grid>
         </ui:Card>
     </Grid>
