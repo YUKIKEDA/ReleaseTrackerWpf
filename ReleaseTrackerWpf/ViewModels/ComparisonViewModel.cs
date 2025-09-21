@@ -52,6 +52,13 @@ namespace ReleaseTrackerWpf.ViewModels
             _notificationService = args.NotificationService;
             _settingsRepository = args.SettingsRepository;
             _snapshotRepository = args.SnapshotRepository;
+
+            // ObservableCollectionの変更をHasSnapshots/HasNoSnapshotsプロパティに通知
+            AvailableSnapshots.CollectionChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(HasSnapshots));
+                OnPropertyChanged(nameof(HasNoSnapshots));
+            };
         }
 
         #region Commands
@@ -153,12 +160,29 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public async Task LoadAvailableSnapshotsAsync(string snapshotsDirectory)
         {
+            // 現在の選択状態を保存
+            var oldSelectedPath = SelectedOldSnapshot?.RootPath;
+            var newSelectedPath = SelectedNewSnapshot?.RootPath;
+
+            // 既存のスナップショットをクリアして重複を防ぐ
+            AvailableSnapshots.Clear();
+
             var settings = await _settingsRepository.GetAsync();
             var snapshotFiles = Directory.GetFiles(settings.SnapshotsDirectory, DirectorySnapshot.SnapshotFilePattern);
             foreach (var snapshotFile in snapshotFiles)
             {
                 var snapshot = await _snapshotRepository.LoadSnapshotAsync(snapshotFile);
                 AvailableSnapshots.Add(snapshot);
+            }
+
+            // 選択状態を復元
+            if (oldSelectedPath != null)
+            {
+                SelectedOldSnapshot = AvailableSnapshots.FirstOrDefault(s => s.RootPath == oldSelectedPath);
+            }
+            if (newSelectedPath != null)
+            {
+                SelectedNewSnapshot = AvailableSnapshots.FirstOrDefault(s => s.RootPath == newSelectedPath);
             }
         }
 
