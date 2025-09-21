@@ -1,0 +1,108 @@
+<UserControl
+    x:Class="ReleaseTrackerWpf.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewmodels="clr-namespace:ReleaseTrackerWpf.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+    mc:Ignorable="d">
+
+    <ui:Card VerticalAlignment="Top">
+        <StackPanel Margin="0">
+            <TextBlock
+                Margin="0,0,0,10"
+                FontSize="18"
+                FontWeight="Bold"
+                Text="アプリケーション設定" />
+
+            <!--  Auto Scan Settings  -->
+            <GroupBox Margin="0,0,0,10" Header="自動スキャン設定">
+                <StackPanel Margin="10">
+                    <CheckBox
+                        Margin="0,0,0,10"
+                        Content="自動スキャンを有効にする"
+                        IsChecked="{Binding AutoScanEnabled, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="Gray"
+                        Text="※ フォルダパス変更後、自動でスキャンを開始します" />
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Storage Settings  -->
+            <GroupBox Margin="0,0,0,10" Header="保存設定">
+                <StackPanel Margin="10">
+                    <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="スナップショット保存先: " />
+                        <Grid Margin="5,0,0,0">
+                            <TextBox
+                                Width="600"
+                                Padding="8,8,40,8"
+                                IsReadOnly="True"
+                                Text="{Binding SnapshotsDirectory}" />
+                            <ui:Button
+                                Width="24"
+                                Height="24"
+                                Margin="0,0,8,0"
+                                Padding="0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{Binding ChangeSnapshotsFolderCommand}"
+                                ToolTip="保存先を変更">
+                                <ui:SymbolIcon FontSize="14" Symbol="FolderOpen16" />
+                            </ui:Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <ui:Button
+                        Margin="0,5,0,10"
+                        HorizontalAlignment="Left"
+                        Command="{Binding OpenSnapshotsFolderCommand}"
+                        Content="保存先フォルダを開く" />
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Export Settings  -->
+            <GroupBox Margin="0,0,0,10" Header="エクスポート設定">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        Text="CSVパス表示形式:" />
+                    
+                    <RadioButton
+                        Margin="0,0,0,5"
+                        Content="通常形式 (例: folder\subfolder\file.txt)"
+                        GroupName="CsvPathFormat"
+                        IsChecked="{Binding CsvPathDisplayFormat, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Normal}" />
+                    
+                    <RadioButton
+                        Margin="0,0,0,5"
+                        Content="ツリー形式 (例: ├─ folder/ ├─ subfolder/ └─ file.txt)"
+                        GroupName="CsvPathFormat"
+                        IsChecked="{Binding CsvPathDisplayFormat, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Tree}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="Gray"
+                        Text="※ ツリー形式ではディレクトリ構造が視覚的に分かりやすく表示されます" />
+                </StackPanel>
+            </GroupBox>
+
+            <!--  About  -->
+            <GroupBox Header="バージョン情報">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Text="ReleaseTracker" />
+                    <TextBlock Margin="0,5,0,0" Text="Version 1.0.0" />
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ui:Card>
+</UserControl>

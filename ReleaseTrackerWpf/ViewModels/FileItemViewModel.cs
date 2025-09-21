@@ -1,7 +1,6 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReleaseTrackerWpf.Models;
-using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace ReleaseTrackerWpf.ViewModels
 {
@@ -9,6 +8,9 @@ namespace ReleaseTrackerWpf.ViewModels
     {
         [ObservableProperty]
         private string name = string.Empty;
+
+        [ObservableProperty]
+        private string fullPath = string.Empty;
 
         [ObservableProperty]
         private string relativePath = string.Empty;
@@ -26,6 +28,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private DifferenceType differenceType;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(DisplayDescription))]
         private string? description;
 
         [ObservableProperty]
@@ -37,11 +40,14 @@ namespace ReleaseTrackerWpf.ViewModels
 
         public string DifferenceTypeText => DifferenceType.ToString();
 
-        public static FileItemViewModel FromModel(FileItem item)
+        public string DisplayDescription => !string.IsNullOrEmpty(Description) ? $" - {Description}" : string.Empty;
+
+        public static FileItemViewModel FromModel(FileSystemEntry item)
         {
             var viewModel = new FileItemViewModel
             {
                 Name = item.Name,
+                FullPath = item.FullPath,
                 RelativePath = item.RelativePath,
                 IsDirectory = item.IsDirectory,
                 Size = item.Size,
@@ -58,11 +64,12 @@ namespace ReleaseTrackerWpf.ViewModels
             return viewModel;
         }
 
-        public FileItem ToModel()
+        public FileSystemEntry ToModel()
         {
-            return new FileItem
+            return new FileSystemEntry
             {
                 Name = Name,
+                FullPath = FullPath,
                 RelativePath = RelativePath,
                 IsDirectory = IsDirectory,
                 Size = Size,

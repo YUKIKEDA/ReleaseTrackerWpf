@@ -5,6 +5,7 @@ namespace ReleaseTrackerWpf.Models
         None,
         Added,
         Deleted,
-        Modified
+        Modified,
+        Unchanged
     }
 }

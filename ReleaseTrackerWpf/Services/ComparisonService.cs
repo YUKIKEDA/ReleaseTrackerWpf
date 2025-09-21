@@ -1,101 +1,229 @@
 using ReleaseTrackerWpf.Models;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.IO;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class ComparisonService : IComparisonService
+    public class ComparisonService
     {
-        public ComparisonResult Compare(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
+        public async Task<ComparisonResult> CompareAsync(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
         {
-            var result = new ComparisonResult();
-
-            var oldItems = FlattenItems(oldSnapshot.Items).ToDictionary(x => x.RelativePath, x => x);
-            var newItems = FlattenItems(newSnapshot.Items).ToDictionary(x => x.RelativePath, x => x);
-
-            // Find added items (in new but not in old)
-            foreach (var newItem in newItems.Values)
+            return await Task.Run(() =>
             {
-                if (!oldItems.ContainsKey(newItem.RelativePath))
+                var result = new ComparisonResult
                 {
-                    var addedItem = CloneFileItem(newItem);
-                    addedItem.DifferenceType = DifferenceType.Added;
-                    result.AddedItems.Add(addedItem);
-                    result.AllDifferences.Add(addedItem);
-                }
+                    OldSnapshot = oldSnapshot,
+                    NewSnapshot = newSnapshot,
+                    ComparisonTime = DateTime.Now
+                };
+
+                var leftTree = new ObservableCollection<FileSystemEntry>();
+                var rightTree = new ObservableCollection<FileSystemEntry>();
+                var statistics = new ComparisonStatistics();
+
+                // Items contains the direct children of the scanned directory
+                var oldItems = oldSnapshot.Items;
+                var newItems = newSnapshot.Items;
+
+                // Compare all items at each level
+                CompareItemLists(oldItems, newItems, leftTree, rightTree, statistics);
+
+                result.LeftTreeItems = leftTree;
+                result.RightTreeItems = rightTree;
+                result.Statistics = statistics;
+
+                return result;
+            });
+        }
+
+        private void CompareItemLists(List<FileSystemEntry> oldItems, List<FileSystemEntry> newItems,
+            ObservableCollection<FileSystemEntry> leftTree, ObservableCollection<FileSystemEntry> rightTree,
+            ComparisonStatistics statistics)
+        {
+            // Get all unique item names from both lists
+            var allItemNames = oldItems.Select(i => i.Name)
+                .Union(newItems.Select(i => i.Name))
+                .OrderBy(name => name)
+                .ToList();
+
+            foreach (var itemName in allItemNames)
+            {
+                var oldItem = oldItems.FirstOrDefault(i => i.Name == itemName);
+                var newItem = newItems.FirstOrDefault(i => i.Name == itemName);
+
+                var (leftItem, rightItem) = CompareItem(oldItem, newItem, statistics);
+
+                if (leftItem != null)
+                    leftTree.Add(leftItem);
+
+                if (rightItem != null)
+                    rightTree.Add(rightItem);
+            }
+        }
+
+        private (FileSystemEntry? leftEntry, FileSystemEntry? rightEntry) CompareItem(
+            FileSystemEntry? oldItem, FileSystemEntry? newItem, ComparisonStatistics statistics)
+        {
+            // Determine the difference type
+            var differenceType = DetermineDifferenceType(oldItem, newItem);
+
+            // Create display entries for left and right sides
+            var leftEntry = CreateDisplayEntry(oldItem, newItem, differenceType, isLeftSide: true);
+            var rightEntry = CreateDisplayEntry(oldItem, newItem, differenceType, isLeftSide: false);
+
+            // Update statistics
+            UpdateStatistics(differenceType, oldItem, newItem, statistics);
+
+            // Process children if this is a directory
+            if (leftEntry?.IsDirectory == true || rightEntry?.IsDirectory == true)
+            {
+                var oldChildren = oldItem?.Children ?? new List<FileSystemEntry>();
+                var newChildren = newItem?.Children ?? new List<FileSystemEntry>();
+
+                var leftChildTree = new ObservableCollection<FileSystemEntry>();
+                var rightChildTree = new ObservableCollection<FileSystemEntry>();
+
+                CompareItemLists(oldChildren, newChildren, leftChildTree, rightChildTree, statistics);
+
+                // Convert ObservableCollection to List for FileSystemEntry.Children
+                if (leftEntry != null)
+                    leftEntry.Children = leftChildTree.ToList();
+
+                if (rightEntry != null)
+                    rightEntry.Children = rightChildTree.ToList();
             }
 
-            // Find deleted items (in old but not in new)
-            foreach (var oldItem in oldItems.Values)
-            {
-                if (!newItems.ContainsKey(oldItem.RelativePath))
-                {
-                    var deletedItem = CloneFileItem(oldItem);
-                    deletedItem.DifferenceType = DifferenceType.Deleted;
-                    result.DeletedItems.Add(deletedItem);
-                    result.AllDifferences.Add(deletedItem);
-                }
-            }
+            return (leftEntry, rightEntry);
+        }
 
-            // Find modified items (exist in both but different)
-            foreach (var newItem in newItems.Values)
+        private DifferenceType DetermineDifferenceType(FileSystemEntry? oldEntry, FileSystemEntry? newEntry)
+        {
+            if (oldEntry == null && newEntry != null)
+                return DifferenceType.Added;
+
+            if (oldEntry != null && newEntry == null)
+                return DifferenceType.Deleted;
+
+            if (oldEntry != null && newEntry != null)
             {
-                if (oldItems.TryGetValue(newItem.RelativePath, out var oldItem))
+                // Check if file was modified (size, last write time, etc.)
+                if (oldEntry.IsDirectory == newEntry.IsDirectory)
                 {
-                    if (IsItemModified(oldItem, newItem))
+                    if (!oldEntry.IsDirectory)
                     {
-                        var modifiedItem = CloneFileItem(newItem);
-                        modifiedItem.DifferenceType = DifferenceType.Modified;
-                        result.ModifiedItems.Add(modifiedItem);
-                        result.AllDifferences.Add(modifiedItem);
+                        if (oldEntry.Size != newEntry.Size ||
+                            oldEntry.LastWriteTime != newEntry.LastWriteTime)
+                        {
+                            return DifferenceType.Modified;
+                        }
+                    }
+                    return DifferenceType.Unchanged;
+                }
+                else
+                {
+                    return DifferenceType.Modified; // Type changed (file to dir or vice versa)
+                }
+            }
+
+            return DifferenceType.None;
+        }
+
+        private FileSystemEntry? CreateDisplayEntry(FileSystemEntry? oldEntry, FileSystemEntry? newEntry,
+            DifferenceType differenceType, bool isLeftSide)
+        {
+            FileSystemEntry? sourceEntry = null;
+
+            if (isLeftSide)
+            {
+                if (differenceType == DifferenceType.Added)
+                {
+                    // Left side: show placeholder (grayed out) for added items
+                    sourceEntry = newEntry;
+                    if (sourceEntry != null)
+                    {
+                        sourceEntry = CloneEntry(sourceEntry);
+                        sourceEntry.DifferenceType = DifferenceType.None; // Grayed out
+                    }
+                }
+                else
+                {
+                    sourceEntry = oldEntry;
+                    if (sourceEntry != null)
+                    {
+                        sourceEntry = CloneEntry(sourceEntry);
+                        sourceEntry.DifferenceType = differenceType;
+                    }
+                }
+            }
+            else
+            {
+                if (differenceType == DifferenceType.Deleted)
+                {
+                    // Right side: show placeholder (grayed out) for deleted items
+                    sourceEntry = oldEntry;
+                    if (sourceEntry != null)
+                    {
+                        sourceEntry = CloneEntry(sourceEntry);
+                        sourceEntry.DifferenceType = DifferenceType.None; // Grayed out
+                    }
+                }
+                else
+                {
+                    sourceEntry = newEntry;
+                    if (sourceEntry != null)
+                    {
+                        sourceEntry = CloneEntry(sourceEntry);
+                        sourceEntry.DifferenceType = differenceType;
                     }
                 }
             }
 
-            return result;
+            return sourceEntry;
         }
 
-        private IEnumerable<FileItem> FlattenItems(IEnumerable<FileItem> items)
+        private FileSystemEntry CloneEntry(FileSystemEntry source)
         {
-            foreach (var item in items)
+            return new FileSystemEntry
             {
-                yield return item;
-                foreach (var child in FlattenItems(item.Children))
-                {
-                    yield return child;
-                }
-            }
-        }
-
-        private bool IsItemModified(FileItem oldItem, FileItem newItem)
-        {
-            if (oldItem.IsDirectory != newItem.IsDirectory)
-                return true;
-
-            if (!oldItem.IsDirectory)
-            {
-                // For files, compare size and last write time
-                return oldItem.Size != newItem.Size ||
-                       oldItem.LastWriteTime != newItem.LastWriteTime;
-            }
-
-            return false;
-        }
-
-        private FileItem CloneFileItem(FileItem original)
-        {
-            return new FileItem
-            {
-                Name = original.Name,
-                FullPath = original.FullPath,
-                RelativePath = original.RelativePath,
-                IsDirectory = original.IsDirectory,
-                Size = original.Size,
-                LastWriteTime = original.LastWriteTime,
-                Children = new List<FileItem>(), // Don't clone children for difference items
-                DifferenceType = original.DifferenceType,
-                Description = original.Description
+                Name = source.Name,
+                FullPath = source.FullPath,
+                RelativePath = source.RelativePath,
+                IsDirectory = source.IsDirectory,
+                Size = source.Size,
+                LastWriteTime = source.LastWriteTime,
+                DifferenceType = source.DifferenceType,
+                Description = source.Description,
+                Children = new List<FileSystemEntry>()
             };
+        }
+
+        private void UpdateStatistics(DifferenceType differenceType, FileSystemEntry? oldEntry, FileSystemEntry? newEntry, ComparisonStatistics statistics)
+        {
+            var isDirectory = oldEntry?.IsDirectory ?? newEntry?.IsDirectory ?? false;
+
+            switch (differenceType)
+            {
+                case DifferenceType.Added:
+                    if (isDirectory)
+                        statistics.AddedDirectories++;
+                    else
+                        statistics.AddedFiles++;
+                    break;
+                case DifferenceType.Deleted:
+                    if (isDirectory)
+                        statistics.DeletedDirectories++;
+                    else
+                        statistics.DeletedFiles++;
+                    break;
+                case DifferenceType.Modified:
+                    if (!isDirectory)
+                        statistics.ModifiedFiles++;
+                    break;
+                case DifferenceType.Unchanged:
+                    if (!isDirectory)
+                        statistics.UnchangedFiles++;
+                    break;
+            }
         }
     }
 }

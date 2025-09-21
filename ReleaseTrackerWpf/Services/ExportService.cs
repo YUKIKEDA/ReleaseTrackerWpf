@@ -1,169 +1,123 @@
+using System.Globalization;
+using System.IO;
+using System.Text;
 using ClosedXML.Excel;
 using CsvHelper;
 using CsvHelper.Configuration;
 using ReleaseTrackerWpf.Models;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class ExportService : IExportService
+    public class ExportService
     {
-        public async Task ExportToExcelAsync(List<FileItem> items, string filePath)
+        public async Task ExportToCsvAsync(DirectorySnapshot snapshot, string filePath, ExportedCsvPathFormat pathDisplayFormat = ExportedCsvPathFormat.Normal)
         {
             await Task.Run(() =>
             {
-                using var workbook = new XLWorkbook();
-                var worksheet = workbook.Worksheets.Add("Comparison Results");
-
-                // Headers
-                worksheet.Cell(1, 1).Value = "File Path";
-                worksheet.Cell(1, 2).Value = "Difference Type";
-                worksheet.Cell(1, 3).Value = "Size";
-                worksheet.Cell(1, 4).Value = "Last Modified";
-                worksheet.Cell(1, 5).Value = "Description";
-
-                // Data
-                for (int i = 0; i < items.Count; i++)
+                var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    var item = items[i];
-                    var row = i + 2;
+                    HasHeaderRecord = true,
+                    Encoding = Encoding.UTF8
+                };
 
-                    worksheet.Cell(row, 1).Value = item.RelativePath;
-                    worksheet.Cell(row, 2).Value = item.DifferenceType.ToString();
-                    worksheet.Cell(row, 3).Value = item.IsDirectory ? "Directory" : $"{item.Size} bytes";
-                    worksheet.Cell(row, 4).Value = item.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    worksheet.Cell(row, 5).Value = item.Description ?? "";
-                }
+                using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, csvConfig);
 
-                // Format headers
-                var headerRange = worksheet.Range(1, 1, 1, 5);
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-
-                // Auto-fit columns
-                worksheet.Columns().AdjustToContents();
-
-                workbook.SaveAs(filePath);
-            });
-        }
-
-        public async Task ExportToCsvAsync(List<FileItem> items, string filePath)
-        {
-            using var writer = new StringWriter();
-            using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
-
-            // Write headers
-            csv.WriteField("File Path");
-            csv.WriteField("Difference Type");
-            csv.WriteField("Size");
-            csv.WriteField("Last Modified");
-            csv.WriteField("Description");
-            csv.NextRecord();
-
-            // Write data
-            foreach (var item in items)
-            {
-                csv.WriteField(item.RelativePath);
-                csv.WriteField(item.DifferenceType.ToString());
-                csv.WriteField(item.IsDirectory ? "Directory" : $"{item.Size} bytes");
-                csv.WriteField(item.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                csv.WriteField(item.Description ?? "");
+                // ヘッダーを書き込み
+                csv.WriteField("パス");
+                csv.WriteField("説明");
                 csv.NextRecord();
-            }
 
-            await File.WriteAllTextAsync(filePath, writer.ToString(), Encoding.UTF8);
-        }
-
-        public async Task ExportToTextAsync(List<FileItem> items, string filePath)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("Comparison Results");
-            sb.AppendLine("================");
-            sb.AppendLine();
-
-            var groupedItems = items.GroupBy(x => x.DifferenceType);
-
-            foreach (var group in groupedItems)
-            {
-                sb.AppendLine($"{group.Key} Items ({group.Count()}):");
-                sb.AppendLine(new string('-', 40));
-
-                foreach (var item in group)
+                // フォーマットに応じて異なるメソッドを呼び出し
+                if (pathDisplayFormat == ExportedCsvPathFormat.Tree)
                 {
-                    sb.AppendLine($"  {item.RelativePath}");
-                    if (!string.IsNullOrEmpty(item.Description))
-                    {
-                        sb.AppendLine($"    Description: {item.Description}");
-                    }
-                    sb.AppendLine($"    Size: {(item.IsDirectory ? "Directory" : $"{item.Size} bytes")}");
-                    sb.AppendLine($"    Last Modified: {item.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
-                    sb.AppendLine();
+                    WriteSnapshotEntriesAsTree(csv, snapshot.Items, new List<bool>());
                 }
-                sb.AppendLine();
-            }
-
-            await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
-        }
-
-        public async Task<Dictionary<string, string>> ImportDescriptionsFromExcelAsync(string filePath)
-        {
-            return await Task.Run(() =>
-            {
-                var descriptions = new Dictionary<string, string>();
-
-                using var workbook = new XLWorkbook(filePath);
-                var worksheet = workbook.Worksheet(1);
-
-                var rows = worksheet.RowsUsed().Skip(1); // Skip header row
-
-                foreach (var row in rows)
+                else
                 {
-                    var filePath = row.Cell(1).GetString();
-                    var description = row.Cell(5).GetString();
-
-                    if (!string.IsNullOrEmpty(filePath) && !string.IsNullOrEmpty(description))
-                    {
-                        descriptions[filePath] = description;
-                    }
+                    WriteSnapshotEntriesAsNormal(csv, snapshot.Items, "");
                 }
-
-                return descriptions;
             });
         }
 
-        public async Task<Dictionary<string, string>> ImportDescriptionsFromCsvAsync(string filePath)
+        /// <summary>
+        /// 通常形式でスナップショットエントリを書き込みます
+        /// </summary>
+        private void WriteSnapshotEntriesAsNormal(CsvWriter csv, IEnumerable<FileSystemEntry> entries, string currentPath)
         {
-            var descriptions = new Dictionary<string, string>();
-
-            using var reader = new StringReader(await File.ReadAllTextAsync(filePath, Encoding.UTF8));
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-
-            var records = csv.GetRecords<dynamic>().ToList();
-
-            foreach (var record in records)
+            foreach (var entry in entries)
             {
-                var dict = (IDictionary<string, object>)record;
+                var displayPath = string.IsNullOrEmpty(currentPath) ? entry.Name : Path.Combine(currentPath, entry.Name);
+                
+                csv.WriteField(displayPath);
+                csv.WriteField(entry.Description ?? "TODO ここに説明を追加");
+                csv.NextRecord();
 
-                if (dict.TryGetValue("File Path", out var filePathObj) &&
-                    dict.TryGetValue("Description", out var descriptionObj))
+                // フォルダの場合は子要素も再帰的に処理
+                if (entry.IsDirectory && entry.Children.Any())
                 {
-                    var filePathStr = filePathObj?.ToString();
-                    var descriptionStr = descriptionObj?.ToString();
-
-                    if (!string.IsNullOrEmpty(filePathStr) && !string.IsNullOrEmpty(descriptionStr))
-                    {
-                        descriptions[filePathStr] = descriptionStr;
-                    }
+                    var childPath = string.IsNullOrEmpty(currentPath) ? entry.Name : Path.Combine(currentPath, entry.Name);
+                    WriteSnapshotEntriesAsNormal(csv, entry.Children, childPath);
                 }
             }
-
-            return descriptions;
         }
+
+        /// <summary>
+        /// ツリー形式でスナップショットエントリを書き込みます
+        /// </summary>
+        private void WriteSnapshotEntriesAsTree(CsvWriter csv, IEnumerable<FileSystemEntry> entries, List<bool> parentIsLast)
+        {
+            var entryList = entries.ToList();
+            
+            foreach (var (entry, index) in entryList.Select((e, i) => (e, i)))
+            {
+                var isLast = index == entryList.Count - 1;
+                var treePrefix = BuildTreePrefix(parentIsLast, isLast);
+                
+                csv.WriteField($"{treePrefix}{entry.Name}{(entry.IsDirectory ? "/" : "")}");
+                csv.WriteField(entry.Description ?? "TODO ここに説明を追加");
+                csv.NextRecord();
+
+                // フォルダの場合は子要素も再帰的に処理
+                if (entry.IsDirectory && entry.Children.Any())
+                {
+                    var newParentIsLast = new List<bool>(parentIsLast) { isLast };
+                    WriteSnapshotEntriesAsTree(csv, entry.Children, newParentIsLast);
+                }
+            }
+        }
+
+        /// <summary>
+        /// ツリー構造のプレフィックスを構築します
+        /// </summary>
+        /// <param name="parentIsLast">親階層での各要素が最後の要素かどうか</param>
+        /// <param name="isLast">現在の要素が最後の要素かどうか</param>
+        /// <returns>ツリー構造のプレフィックス文字列</returns>
+        private string BuildTreePrefix(List<bool> parentIsLast, bool isLast)
+        {
+            var prefix = new StringBuilder();
+            
+            // 親階層のプレフィックスを構築
+            foreach (var parentLast in parentIsLast)
+            {
+                if (parentLast)
+                {
+                    prefix.Append("    "); // 最後の要素の子は空白4文字
+                }
+                else
+                {
+                    prefix.Append("│   "); // 中間要素の子は縦線
+                }
+            }
+            
+            // 現在の要素のプレフィックス
+            if (parentIsLast.Count > 0) // ルート要素でない場合
+            {
+                prefix.Append(isLast ? "└─ " : "├─ ");
+            }
+            
+            return prefix.ToString();
+        }
+
     }
 }

@@ -1,14 +1,9 @@
-using ReleaseTrackerWpf.Models;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {
-    public class DirectoryService : IDirectoryService
+    public class DirectoryScanService
     {
         public async Task<DirectorySnapshot> ScanDirectoryAsync(string path)
         {
@@ -19,7 +14,7 @@ namespace ReleaseTrackerWpf.Services
             {
                 RootPath = path,
                 CreatedAt = DateTime.Now,
-                Items = new List<FileItem>()
+                Items = new List<FileSystemEntry>()
             };
 
             await Task.Run(() =>
@@ -30,9 +25,9 @@ namespace ReleaseTrackerWpf.Services
             return snapshot;
         }
 
-        private IEnumerable<FileItem> ScanDirectoryRecursive(string currentPath, string rootPath)
+        private static List<FileSystemEntry> ScanDirectoryRecursive(string currentPath, string rootPath)
         {
-            var items = new List<FileItem>();
+            var items = new List<FileSystemEntry>();
 
             try
             {
@@ -41,7 +36,7 @@ namespace ReleaseTrackerWpf.Services
                 foreach (var dir in directories)
                 {
                     var dirInfo = new DirectoryInfo(dir);
-                    var item = new FileItem
+                    var item = new FileSystemEntry
                     {
                         Name = dirInfo.Name,
                         FullPath = dirInfo.FullName,
@@ -59,7 +54,7 @@ namespace ReleaseTrackerWpf.Services
                 foreach (var file in files)
                 {
                     var fileInfo = new FileInfo(file);
-                    var item = new FileItem
+                    var item = new FileSystemEntry
                     {
                         Name = fileInfo.Name,
                         FullPath = fileInfo.FullName,
@@ -81,27 +76,6 @@ namespace ReleaseTrackerWpf.Services
             }
 
             return items;
-        }
-
-        public async Task SaveSnapshotAsync(DirectorySnapshot snapshot, string filePath)
-        {
-            var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-
-            await File.WriteAllTextAsync(filePath, json);
-        }
-
-        public async Task<DirectorySnapshot> LoadSnapshotAsync(string filePath)
-        {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"Snapshot file not found: {filePath}");
-
-            var json = await File.ReadAllTextAsync(filePath);
-            var snapshot = JsonSerializer.Deserialize<DirectorySnapshot>(json);
-
-            return snapshot ?? throw new InvalidOperationException("Failed to deserialize snapshot");
         }
     }
 }

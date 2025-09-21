@@ -1,0 +1,176 @@
+@model UserCardViewModel
+
+<div class="user-card" data-user-id="@Model.UserId">
+    <div class="user-card-header">
+        <img src="@Model.ProfileImageUrl" alt="@Model.Name" class="user-avatar" />
+        <div class="user-info">
+            <h3 class="user-name">@Model.Name</h3>
+            <p class="user-email">@Model.Email</p>
+        </div>
+        <div class="user-actions">
+            <button class="btn btn-sm btn-primary" onclick="editUser(@Model.UserId)">
+                <i class="fas fa-edit"></i> 編集
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser(@Model.UserId)">
+                <i class="fas fa-trash"></i> 削除
+            </button>
+        </div>
+    </div>
+    
+    <div class="user-card-body">
+        <div class="user-stats">
+            <div class="stat-item">
+                <span class="stat-label">登録日</span>
+                <span class="stat-value">@Model.RegistrationDate.ToString("yyyy/MM/dd")</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">最終ログイン</span>
+                <span class="stat-value">@Model.LastLoginDate?.ToString("yyyy/MM/dd HH:mm")</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">ステータス</span>
+                <span class="stat-value">
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge badge-success">アクティブ</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">非アクティブ</span>
+                    }
+                </span>
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.Bio))
+        {
+            <div class="user-bio">
+                <p>@Model.Bio</p>
+            </div>
+        }
+    </div>
+    
+    <div class="user-card-footer">
+        <div class="user-roles">
+            @foreach (var role in Model.Roles)
+            {
+                <span class="badge badge-info">@role</span>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.user-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.user-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-right: 12px;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.user-email {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.user-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.user-bio {
+    margin-bottom: 12px;
+}
+
+.user-bio p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.user-roles {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-secondary {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.badge-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+</style>

@@ -1,11 +1,9 @@
 using ReleaseTrackerWpf.Models;
-using System.Threading.Tasks;
 
-namespace ReleaseTrackerWpf.Services
+namespace ReleaseTrackerWpf.Repositories
 {
-    public interface IDirectoryService
+    public interface ISnapshotRepository
     {
-        Task<DirectorySnapshot> ScanDirectoryAsync(string path);
         Task SaveSnapshotAsync(DirectorySnapshot snapshot, string filePath);
         Task<DirectorySnapshot> LoadSnapshotAsync(string filePath);
     }

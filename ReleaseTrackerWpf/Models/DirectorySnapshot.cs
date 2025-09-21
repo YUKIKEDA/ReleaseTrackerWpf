@@ -1,13 +1,44 @@
-using System;
-using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ReleaseTrackerWpf.Models
 {
-    public class DirectorySnapshot
+    public partial class DirectorySnapshot : ObservableObject
     {
-        public string RootPath { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public string Version { get; set; } = string.Empty;
-        public List<FileItem> Items { get; set; } = new List<FileItem>();
+        #region Constants
+
+        /// <summary>
+        /// スナップショットファイルの拡張子
+        /// </summary>
+        public const string SnapshotFileExtension = ".json";
+
+        /// <summary>
+        /// スナップショットファイルの接頭辞
+        /// </summary>
+        public const string SnapshotFilePrefix = "snapshot_";
+
+        /// <summary>
+        /// スナップショットファイルの検索パターン
+        /// </summary>
+        public const string SnapshotFilePattern = $"{SnapshotFilePrefix}*{SnapshotFileExtension}";
+
+        /// <summary>
+        /// スナップショットファイル名のフォーマット
+        /// </summary>
+        public const string SnapshotFileNameFormat = SnapshotFilePrefix + "{0:yyyyMMdd_HHmmss}" + SnapshotFileExtension;
+
+        #endregion
+
+        #region Properties
+
+        [ObservableProperty]
+        private string _rootPath = string.Empty;
+
+        [ObservableProperty]
+        private DateTime _createdAt;
+
+        [ObservableProperty]
+        private List<FileSystemEntry> _items = [];
+
+        #endregion
     }
 }
