@@ -60,10 +60,36 @@
                     </StackPanel>
 
                     <ui:Button
-                        Margin="0,5,0,0"
+                        Margin="0,5,0,10"
                         HorizontalAlignment="Left"
                         Command="{Binding OpenSnapshotsFolderCommand}"
                         Content="保存先フォルダを開く" />
+                </StackPanel>
+            </GroupBox>
+
+            <!--  Export Settings  -->
+            <GroupBox Margin="0,0,0,10" Header="エクスポート設定">
+                <StackPanel Margin="10">
+                    <TextBlock
+                        Margin="0,0,0,5"
+                        Text="CSVパス表示形式:" />
+                    
+                    <RadioButton
+                        Margin="0,0,0,5"
+                        Content="通常形式 (例: folder\subfolder\file.txt)"
+                        GroupName="CsvPathFormat"
+                        IsChecked="{Binding CsvPathDisplayFormat, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Normal}" />
+                    
+                    <RadioButton
+                        Margin="0,0,0,5"
+                        Content="ツリー形式 (例: ├─ folder/ ├─ subfolder/ └─ file.txt)"
+                        GroupName="CsvPathFormat"
+                        IsChecked="{Binding CsvPathDisplayFormat, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Tree}" />
+
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="Gray"
+                        Text="※ ツリー形式ではディレクトリ構造が視覚的に分かりやすく表示されます" />
                 </StackPanel>
             </GroupBox>
 

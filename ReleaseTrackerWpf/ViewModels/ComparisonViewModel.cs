@@ -213,8 +213,11 @@ namespace ReleaseTrackerWpf.ViewModels
                     // プログレス付きInfoBarを表示
                     _notificationService.ShowProgressInfoBar("処理中", "CSVファイルをエクスポート中...", 0);
 
+                    // 設定を取得してパス表示形式を決定
+                    var settings = await _settingsRepository.GetAsync();
+                    
                     // スナップショットをCSVにエクスポート
-                    await _exportService.ExportToCsvAsync(snapshot, saveDialog.FileName);
+                    await _exportService.ExportToCsvAsync(snapshot, saveDialog.FileName, settings.CsvPathDisplayFormat);
 
                     // 完了InfoBarを表示
                     _notificationService.ShowInfoBar("通知", "CSVファイルのエクスポートが完了しました", InfoBarSeverity.Success, 5);

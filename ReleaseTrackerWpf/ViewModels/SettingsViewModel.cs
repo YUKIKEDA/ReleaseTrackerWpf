@@ -23,6 +23,9 @@ namespace ReleaseTrackerWpf.ViewModels
         [ObservableProperty]
         private bool autoScanEnabled = false;
 
+        [ObservableProperty]
+        private ExportedCsvPathFormat csvPathDisplayFormat = ExportedCsvPathFormat.Normal;
+
         #endregion
 
         public SettingsViewModel(SettingsViewModelArgs args)
@@ -34,11 +37,22 @@ namespace ReleaseTrackerWpf.ViewModels
         async partial void OnAutoScanEnabledChanged(bool value)
         {
             // 設定を自動保存
-            var settings = new SettingsData(SnapshotsDirectory, value);
+            var settings = new SettingsData(SnapshotsDirectory, value, CsvPathDisplayFormat);
             await _settingsRepository.SaveAsync(settings);
             
             // 設定保存完了を通知
             var message = value ? "自動スキャンが有効になりました" : "自動スキャンが無効になりました";
+            _notificationService.ShowInfoBar("設定保存完了", message, InfoBarSeverity.Success, 3);
+        }
+
+        async partial void OnCsvPathDisplayFormatChanged(ExportedCsvPathFormat value)
+        {
+            // 設定を自動保存
+            var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled, value);
+            await _settingsRepository.SaveAsync(settings);
+            
+            // 設定保存完了を通知
+            var message = value == ExportedCsvPathFormat.Tree ? "CSVパス表示形式をツリー形式に変更しました" : "CSVパス表示形式を通常形式に変更しました";
             _notificationService.ShowInfoBar("設定保存完了", message, InfoBarSeverity.Success, 3);
         }
 
@@ -63,7 +77,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     SnapshotsDirectory = selectedPath;
-                    var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled);
+                    var settings = new SettingsData(SnapshotsDirectory, AutoScanEnabled, CsvPathDisplayFormat);
                     await _settingsRepository.SaveAsync(settings);
                 }
             }
@@ -93,6 +107,7 @@ namespace ReleaseTrackerWpf.ViewModels
             var settings = await _settingsRepository.GetAsync();
             SnapshotsDirectory = settings.SnapshotsDirectory;
             AutoScanEnabled = settings.AutoScanEnabled;
+            CsvPathDisplayFormat = settings.CsvPathDisplayFormat;
         }
 
         #endregion

@@ -17,11 +17,6 @@
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
-    <ui:FluentWindow.Resources>
-        <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </ui:FluentWindow.Resources>
-
     <Grid Background="{StaticResource ApplicationBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

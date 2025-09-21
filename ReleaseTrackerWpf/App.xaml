@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ReleaseTrackerWpf"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:converters="clr-namespace:ReleaseTrackerWpf.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -14,6 +15,13 @@
 
             <!--  アプリケーション全体の背景色を設定  -->
             <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#FFFAEF" />
+
+            <!--  Converters  -->
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <converters:FolderFileIconConverter x:Key="FolderFileIconConverter" />
+            <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+            <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
+            <converters:DifferenceTypeToForegroundConverter x:Key="DifferenceTypeToForegroundConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

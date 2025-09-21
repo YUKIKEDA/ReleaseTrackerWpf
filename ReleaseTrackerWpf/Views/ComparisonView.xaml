@@ -11,13 +11,6 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:ComparisonViewModel}"
     mc:Ignorable="d">
 
-    <UserControl.Resources>
-        <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
-        <converters:DifferenceTypeToForegroundConverter x:Key="DifferenceTypeToForegroundConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <converters:FolderFileIconConverter x:Key="FolderFileIconConverter" />
-    </UserControl.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
