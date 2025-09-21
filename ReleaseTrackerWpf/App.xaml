@@ -16,6 +16,9 @@
             <!--  アプリケーション全体の背景色を設定  -->
             <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#FFFAEF" />
 
+            <!--  Apply custom button style globally  -->
+            <Style TargetType="ui:Button" BasedOn="{StaticResource CustomButtonStyle}" />
+
             <!--  Converters  -->
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:FolderFileIconConverter x:Key="FolderFileIconConverter" />
