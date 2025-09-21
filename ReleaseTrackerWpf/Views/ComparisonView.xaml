@@ -179,7 +179,7 @@
                     Orientation="Horizontal">
                     <ui:Button
                         Margin="5,0,5,0"
-                        Command="{Binding ExportResultsCommand}"
+                        Command="{Binding ExportOldSnapshotCommand}"
                         Content="CSVエクスポート" />
                     <ui:Button
                         Margin="5,0,0,0"
@@ -195,7 +195,7 @@
                     Orientation="Horizontal">
                     <ui:Button
                         Margin="5,0,5,0"
-                        Command="{Binding ExportResultsCommand}"
+                        Command="{Binding ExportNewSnapshotCommand}"
                         Content="CSVエクスポート" />
                     <ui:Button
                         Margin="5,0,0,0"

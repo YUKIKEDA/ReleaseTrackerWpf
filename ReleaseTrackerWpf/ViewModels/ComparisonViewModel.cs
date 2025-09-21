@@ -170,12 +170,59 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
-        private Task ExportResultsAsync()
+        private async Task ExportOldSnapshotAsync()
         {
-            // TODO: Implement export functionality
-            // エクスポート成功のInfoBarを表示
-            _notificationService.ShowInfoBar("通知", "エクスポートが完了しました", InfoBarSeverity.Success, 5);
-            return Task.CompletedTask;
+            if (SelectedOldSnapshot == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較元のスナップショットを選択してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
+
+            await ExportSingleSnapshotAsync(SelectedOldSnapshot);
+        }
+
+        [RelayCommand]
+        private async Task ExportNewSnapshotAsync()
+        {
+            if (SelectedNewSnapshot == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較先のスナップショットを選択してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
+
+            await ExportSingleSnapshotAsync(SelectedNewSnapshot);
+        }
+
+        private async Task ExportSingleSnapshotAsync(DirectorySnapshot snapshot)
+        {
+            try
+            {
+                // ファイル保存ダイアログを表示
+                var saveDialog = new SaveFileDialog
+                {
+                    Title = "CSVファイルを保存",
+                    Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
+                    DefaultExt = "csv",
+                    FileName = $"スナップショット_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // プログレス付きInfoBarを表示
+                    _notificationService.ShowProgressInfoBar("処理中", "CSVファイルをエクスポート中...", 0);
+
+                    // スナップショットをCSVにエクスポート
+                    await _exportService.ExportToCsvAsync(snapshot, saveDialog.FileName);
+
+                    // 完了InfoBarを表示
+                    _notificationService.ShowInfoBar("通知", "CSVファイルのエクスポートが完了しました", InfoBarSeverity.Success, 5);
+                }
+            }
+            catch (Exception ex)
+            {
+                // エラーInfoBarを表示
+                _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+            }
         }
 
         [RelayCommand]
