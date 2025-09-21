@@ -145,6 +145,7 @@
             <Grid Margin="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
@@ -167,181 +168,205 @@
                             Margin="0,0,5,0"
                             Command="{Binding CompareDirectoryCommand}"
                             Content="スキャン実行" />
-                        <ui:Button
-                            Margin="5,0,5,0"
-                            Command="{Binding ExportResultsCommand}"
-                            Content="エクスポート" />
-                        <ui:Button
-                            Margin="5,0,0,0"
-                            Command="{Binding ImportDescriptionsCommand}"
-                            Content="説明インポート" />
                     </StackPanel>
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <ui:Button
+                        Margin="5,0,5,0"
+                        Command="{Binding ExportResultsCommand}"
+                        Content="CSVエクスポート" />
+                    <ui:Button
+                        Margin="5,0,0,0"
+                        Command="{Binding ImportDescriptionsCommand}"
+                        Content="説明インポート" />
+                </StackPanel>
+
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <ui:Button
+                        Margin="5,0,5,0"
+                        Command="{Binding ExportResultsCommand}"
+                        Content="CSVエクスポート" />
+                    <ui:Button
+                        Margin="5,0,0,0"
+                        Command="{Binding ImportDescriptionsCommand}"
+                        Content="説明インポート" />
                 </StackPanel>
 
                 <!--  Comparison Results TreeView (Old)  -->
                 <ScrollViewer
                     x:Name="LeftScrollViewer"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="0"
                     Margin="0,0,5,0"
                     HorizontalScrollBarVisibility="Auto"
-                    VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
                     PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                    ScrollChanged="LeftScrollViewer_ScrollChanged">
+                    ScrollChanged="LeftScrollViewer_ScrollChanged"
+                    VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TreeView
-                        ItemsSource="{Binding OldDisplayedDirectoryStructure}"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch">
-                    <TreeView.Resources>
-                        <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
-                        <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal">
-                                <!--  フォルダ/ファイルアイコン  -->
-                                <ui:SymbolIcon
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="14"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="{Binding Name}"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}" />
-                                <TextBlock
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                    Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
-                            </StackPanel>
-                        </HierarchicalDataTemplate>
-                    </TreeView.Resources>
-                    <TreeView.ItemContainerStyle>
-                        <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="True" />
-                            <Setter Property="Padding" Value="4,2" />
-                            <Setter Property="Margin" Value="0,1" />
-                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
-                            <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Style.Triggers>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </MultiDataTrigger>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </MultiDataTrigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                    <TreeView.Style>
-                        <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
-                            <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
-                            <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                            <Setter Property="BorderThickness" Value="1" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </TreeView.Style>
-                </TreeView>
+                        VerticalAlignment="Stretch"
+                        ItemsSource="{Binding OldDisplayedDirectoryStructure}">
+                        <TreeView.Resources>
+                            <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
+                            <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <!--  フォルダ/ファイルアイコン  -->
+                                    <ui:SymbolIcon
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding Name}" />
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
+                                        Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.Resources>
+                        <TreeView.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True" />
+                                <Setter Property="Padding" Value="4,2" />
+                                <Setter Property="Margin" Value="0,1" />
+                                <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
+                                <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </MultiDataTrigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                        <TreeView.Style>
+                            <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
+                                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="Padding" Value="8" />
+                            </Style>
+                        </TreeView.Style>
+                    </TreeView>
                 </ScrollViewer>
 
                 <!--  Comparison Results TreeView (New)  -->
                 <ScrollViewer
                     x:Name="RightScrollViewer"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="1"
                     Margin="5,0,0,0"
                     HorizontalScrollBarVisibility="Auto"
-                    VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
                     PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                    ScrollChanged="RightScrollViewer_ScrollChanged">
+                    ScrollChanged="RightScrollViewer_ScrollChanged"
+                    VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TreeView
-                        ItemsSource="{Binding NewDisplayedDirectoryStructure}"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch">
-                    <TreeView.Resources>
-                        <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
-                        <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal">
-                                <!--  フォルダ/ファイルアイコン  -->
-                                <ui:SymbolIcon
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="14"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="{Binding Name}"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}" />
-                                <TextBlock
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                    Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
-                            </StackPanel>
-                        </HierarchicalDataTemplate>
-                    </TreeView.Resources>
-                    <TreeView.ItemContainerStyle>
-                        <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
-                            <Setter Property="IsExpanded" Value="True" />
-                            <Setter Property="Padding" Value="4,2" />
-                            <Setter Property="Margin" Value="0,1" />
-                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
-                            <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Style.Triggers>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </MultiDataTrigger>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
-                                    </MultiDataTrigger.Conditions>
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </MultiDataTrigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
-                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                    <TreeView.Style>
-                        <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
-                            <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
-                            <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                            <Setter Property="BorderThickness" Value="1" />
-                            <Setter Property="Padding" Value="8" />
-                        </Style>
-                    </TreeView.Style>
-                </TreeView>
+                        VerticalAlignment="Stretch"
+                        ItemsSource="{Binding NewDisplayedDirectoryStructure}">
+                        <TreeView.Resources>
+                            <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
+                            <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <!--  フォルダ/ファイルアイコン  -->
+                                    <ui:SymbolIcon
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding Name}" />
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
+                                        Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.Resources>
+                        <TreeView.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True" />
+                                <Setter Property="Padding" Value="4,2" />
+                                <Setter Property="Margin" Value="0,1" />
+                                <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
+                                <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                            <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </MultiDataTrigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
+                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                        <TreeView.Style>
+                            <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
+                                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Setter Property="Padding" Value="8" />
+                            </Style>
+                        </TreeView.Style>
+                    </TreeView>
                 </ScrollViewer>
             </Grid>
         </ui:Card>
