@@ -48,6 +48,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 args.DirectoryScanService, 
                 args.ComparisonService, 
                 args.ExportService, 
+                args.ImportDescriptionService,
                 args.NotificationService, 
                 args.SettingsRepository,
                 args.SnapshotRepository

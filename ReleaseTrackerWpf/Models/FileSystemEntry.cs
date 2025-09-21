@@ -15,7 +15,6 @@ namespace ReleaseTrackerWpf.Models
         [JsonIgnore]
         public DifferenceType DifferenceType { get; set; } = DifferenceType.None;
 
-        [JsonIgnore]
         public string? Description { get; set; }
     }
 }

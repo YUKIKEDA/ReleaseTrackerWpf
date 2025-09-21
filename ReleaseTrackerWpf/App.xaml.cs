@@ -23,6 +23,7 @@ namespace ReleaseTrackerWpf
             var directoryScanService = new DirectoryScanService();
             var comparisonService = new ComparisonService();
             var exportService = new ExportService();
+            var importDescriptionService = new ImportDescriptionService();
             var notificationService = new NotificationService();
 
             // DTOクラスで依存関係をまとめる
@@ -30,6 +31,7 @@ namespace ReleaseTrackerWpf
                 directoryScanService, 
                 comparisonService, 
                 exportService, 
+                importDescriptionService,
                 settingsRepository, 
                 notificationService,
                 snapshotRepository

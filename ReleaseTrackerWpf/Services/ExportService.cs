@@ -40,7 +40,7 @@ namespace ReleaseTrackerWpf.Services
                 var fullPath = string.IsNullOrEmpty(currentPath) ? entry.Name : Path.Combine(currentPath, entry.Name);
                 
                 csv.WriteField(fullPath);
-                csv.WriteField("TODO ここに説明を追加");
+                csv.WriteField(entry.Description ?? "TODO ここに説明を追加");
                 csv.NextRecord();
 
                 // フォルダの場合は子要素も再帰的に処理
@@ -50,5 +50,6 @@ namespace ReleaseTrackerWpf.Services
                 }
             }
         }
+
     }
 }

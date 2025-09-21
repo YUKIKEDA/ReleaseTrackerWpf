@@ -183,7 +183,7 @@
                         Content="CSVエクスポート" />
                     <ui:Button
                         Margin="5,0,0,0"
-                        Command="{Binding ImportDescriptionsCommand}"
+                        Command="{Binding ImportOldDescriptionsCommand}"
                         Content="説明インポート" />
                 </StackPanel>
 
@@ -199,7 +199,7 @@
                         Content="CSVエクスポート" />
                     <ui:Button
                         Margin="5,0,0,0"
-                        Command="{Binding ImportDescriptionsCommand}"
+                        Command="{Binding ImportNewDescriptionsCommand}"
                         Content="説明インポート" />
                 </StackPanel>
 

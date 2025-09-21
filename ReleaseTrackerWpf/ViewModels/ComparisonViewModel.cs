@@ -15,6 +15,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly DirectoryScanService _directoryScanService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
+        private readonly ImportDescriptionService _importDescriptionService;
         private readonly INotificationService _notificationService;
         private readonly ISettingsRepository _settingsRepository;
         private readonly ISnapshotRepository _snapshotRepository;
@@ -82,6 +83,7 @@ namespace ReleaseTrackerWpf.ViewModels
             _directoryScanService = args.DirectoryScanService;
             _comparisonService = args.ComparisonService;
             _exportService = args.ExportService;
+            _importDescriptionService = args.ImportDescriptionService;
             _notificationService = args.NotificationService;
             _settingsRepository = args.SettingsRepository;
             _snapshotRepository = args.SnapshotRepository;
@@ -226,12 +228,72 @@ namespace ReleaseTrackerWpf.ViewModels
         }
 
         [RelayCommand]
-        private Task ImportDescriptionsAsync()
+        private async Task ImportOldDescriptionsAsync()
         {
-            // TODO : Implement import functionality
-            // インポート成功のInfoBarを表示
-            _notificationService.ShowInfoBar("通知", "説明のインポートが完了しました", InfoBarSeverity.Success, 5);
-            return Task.CompletedTask;
+            if (SelectedOldSnapshot == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較元のスナップショットを選択してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
+
+            await ImportDescriptionsForSnapshotAsync(SelectedOldSnapshot, "比較元");
+        }
+
+        [RelayCommand]
+        private async Task ImportNewDescriptionsAsync()
+        {
+            if (SelectedNewSnapshot == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較先のスナップショットを選択してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
+
+            await ImportDescriptionsForSnapshotAsync(SelectedNewSnapshot, "比較先");
+        }
+
+        private async Task ImportDescriptionsForSnapshotAsync(DirectorySnapshot snapshot, string snapshotType)
+        {
+            try
+            {
+                // ファイル選択ダイアログを表示
+                var openDialog = new OpenFileDialog
+                {
+                    Title = $"{snapshotType}用の説明が追加されたCSVファイルを選択",
+                    Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
+                    DefaultExt = "csv"
+                };
+
+                if (openDialog.ShowDialog() == true)
+                {
+                    // プログレス付きInfoBarを表示
+                    _notificationService.ShowProgressInfoBar("処理中", "CSVファイルから説明をインポート中...", 0);
+
+                    // CSVファイルから説明をインポート
+                    var descriptions = await _importDescriptionService.ImportDescriptionsFromCsvAsync(openDialog.FileName);
+
+                    // スナップショットに説明を適用
+                    _importDescriptionService.UpdateSnapshotDescriptions(snapshot, descriptions);
+
+                    // 更新されたスナップショットを保存
+                    var settings = await _settingsRepository.GetAsync();
+                    var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, snapshot.CreatedAt);
+                    var filePath = Path.Combine(settings.SnapshotsDirectory, fileName);
+                    await _snapshotRepository.SaveSnapshotAsync(snapshot, filePath);
+
+                    // 完了InfoBarを表示
+                    var updatedDescriptionsCount = descriptions.Count;
+                    var message = updatedDescriptionsCount > 0
+                        ? $"{snapshotType}の説明のインポートが完了しました（{updatedDescriptionsCount}個の説明を更新）"
+                        : $"{snapshotType}の説明のインポートが完了しました（更新された説明はありませんでした）";
+
+                    _notificationService.ShowInfoBar("通知", message, InfoBarSeverity.Success, 5);
+                }
+            }
+            catch (Exception ex)
+            {
+                // エラーInfoBarを表示
+                _notificationService.ShowInfoBar("エラー", $"インポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+            }
         }
 
         #endregion

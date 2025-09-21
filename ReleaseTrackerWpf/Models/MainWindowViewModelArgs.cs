@@ -10,6 +10,7 @@ namespace ReleaseTrackerWpf.Models
         DirectoryScanService DirectoryScanService,
         ComparisonService ComparisonService,
         ExportService ExportService,
+        ImportDescriptionService ImportDescriptionService,
         ISettingsRepository SettingsRepository,
         INotificationService NotificationService,
         ISnapshotRepository SnapshotRepository);
