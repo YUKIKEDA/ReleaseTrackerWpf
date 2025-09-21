@@ -1,6 +1,5 @@
-using ReleaseTrackerWpf.Models;
 using System.Collections.ObjectModel;
-using System.IO;
+using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
 {

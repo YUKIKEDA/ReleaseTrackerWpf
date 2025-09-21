@@ -2,9 +2,9 @@
     x:Class="ReleaseTrackerWpf.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:ReleaseTrackerWpf.Converters"
     xmlns:local="clr-namespace:ReleaseTrackerWpf"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:converters="clr-namespace:ReleaseTrackerWpf.Converters">
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -17,7 +17,7 @@
             <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#FFFAEF" />
 
             <!--  Apply custom button style globally  -->
-            <Style TargetType="ui:Button" BasedOn="{StaticResource CustomButtonStyle}" />
+            <Style BasedOn="{StaticResource CustomButtonStyle}" TargetType="ui:Button" />
 
             <!--  Converters  -->
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
