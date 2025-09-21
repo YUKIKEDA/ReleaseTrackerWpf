@@ -240,6 +240,14 @@
                                         Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                         Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
                                         Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                    <!--  説明文の表示  -->
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding DisplayDescription}"
+                                        Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
@@ -323,6 +331,14 @@
                                         Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
                                         Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
                                         Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                    <!--  説明文の表示  -->
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding DisplayDescription}"
+                                        Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </StackPanel>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>

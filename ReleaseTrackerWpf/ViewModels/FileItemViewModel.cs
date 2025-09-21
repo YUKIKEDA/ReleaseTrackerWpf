@@ -28,6 +28,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private DifferenceType differenceType;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(DisplayDescription))]
         private string? description;
 
         [ObservableProperty]
@@ -38,6 +39,8 @@ namespace ReleaseTrackerWpf.ViewModels
         public string DisplaySize => IsDirectory ? "Directory" : $"{Size:N0} bytes";
 
         public string DifferenceTypeText => DifferenceType.ToString();
+
+        public string DisplayDescription => !string.IsNullOrEmpty(Description) ? $" - {Description}" : string.Empty;
 
         public static FileItemViewModel FromModel(FileSystemEntry item)
         {

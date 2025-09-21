@@ -192,6 +192,7 @@ namespace ReleaseTrackerWpf.Services
                 Size = source.Size,
                 LastWriteTime = source.LastWriteTime,
                 DifferenceType = source.DifferenceType,
+                Description = source.Description,
                 Children = new List<FileSystemEntry>()
             };
         }
