@@ -43,6 +43,39 @@ namespace ReleaseTrackerWpf.ViewModels
 
         #endregion
 
+        #region Property Change Handlers
+
+        async partial void OnSelectedOldSnapshotChanged(DirectorySnapshot? value)
+        {
+            OnPropertyChanged(nameof(BothSnapshotsSelected));
+            
+            // 自動スキャンが有効で、両方のスナップショットが選択された場合、自動で比較を実行
+            if (BothSnapshotsSelected)
+            {
+                var settings = await _settingsRepository.GetAsync();
+                if (settings.AutoScanEnabled)
+                {
+                    _ = CompareDirectoryAsync();
+                }
+            }
+        }
+
+        async partial void OnSelectedNewSnapshotChanged(DirectorySnapshot? value)
+        {
+            OnPropertyChanged(nameof(BothSnapshotsSelected));
+            
+            // 自動スキャンが有効で、両方のスナップショットが選択された場合、自動で比較を実行
+            if (BothSnapshotsSelected)
+            {
+                var settings = await _settingsRepository.GetAsync();
+                if (settings.AutoScanEnabled)
+                {
+                    _ = CompareDirectoryAsync();
+                }
+            }
+        }
+
+        #endregion
 
         public ComparisonViewModel(ComparisonViewModelArgs args)
         {

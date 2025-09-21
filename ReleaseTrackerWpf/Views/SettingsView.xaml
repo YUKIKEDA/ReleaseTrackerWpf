@@ -23,7 +23,7 @@
                     <CheckBox
                         Margin="0,0,0,10"
                         Content="自動スキャンを有効にする"
-                        IsChecked="{Binding AutoScanEnabled}" />
+                        IsChecked="{Binding AutoScanEnabled, UpdateSourceTrigger=PropertyChanged}" />
 
                     <TextBlock
                         FontSize="11"

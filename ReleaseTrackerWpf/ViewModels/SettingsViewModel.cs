@@ -31,6 +31,17 @@ namespace ReleaseTrackerWpf.ViewModels
             _notificationService = args.NotificationService;
         }
 
+        async partial void OnAutoScanEnabledChanged(bool value)
+        {
+            // 設定を自動保存
+            var settings = new SettingsData(SnapshotsDirectory, value);
+            await _settingsRepository.SaveAsync(settings);
+            
+            // 設定保存完了を通知
+            var message = value ? "自動スキャンが有効になりました" : "自動スキャンが無効になりました";
+            _notificationService.ShowInfoBar("設定保存完了", message, InfoBarSeverity.Success, 3);
+        }
+
         #region Commands
 
         [RelayCommand]
