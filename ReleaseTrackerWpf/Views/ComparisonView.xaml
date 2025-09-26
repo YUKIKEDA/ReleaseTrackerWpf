@@ -379,5 +379,36 @@
                 </ScrollViewer>
             </Grid>
         </ui:Card>
+
+        <!-- 比較進捗ダイアログオーバーレイ -->
+        <Grid
+            Grid.RowSpan="3"
+            Background="#80000000"
+            Visibility="{Binding IsComparison, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ui:Card
+                Width="300"
+                Height="150"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ui:ProgressRing
+                        Width="48"
+                        Height="48"
+                        Margin="0,0,0,20"
+                        IsIndeterminate="True" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="比較処理中..." />
+                    <TextBlock
+                        Margin="0,5,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="Gray"
+                        Text="しばらくお待ちください" />
+                </StackPanel>
+            </ui:Card>
+        </Grid>
     </Grid>
 </UserControl>

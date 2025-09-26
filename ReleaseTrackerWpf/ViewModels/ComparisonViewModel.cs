@@ -34,6 +34,9 @@ namespace ReleaseTrackerWpf.ViewModels
         [NotifyPropertyChangedFor(nameof(BothSnapshotsSelected))]
         private DirectorySnapshot? selectedNewSnapshot;
 
+        [ObservableProperty]
+        private bool isComparison;
+
         #endregion
 
         #region Properties
@@ -49,14 +52,14 @@ namespace ReleaseTrackerWpf.ViewModels
         async partial void OnSelectedOldSnapshotChanged(DirectorySnapshot? value)
         {
             OnPropertyChanged(nameof(BothSnapshotsSelected));
-            
+
             // 自動スキャンが有効で、両方のスナップショットが選択された場合、自動で比較を実行
-            if (BothSnapshotsSelected)
+            if (BothSnapshotsSelected && !IsComparison)
             {
                 var settings = await _settingsRepository.GetAsync();
                 if (settings.AutoScanEnabled)
                 {
-                    _ = CompareDirectoryAsync();
+                    await CompareDirectoryAsync();
                 }
             }
         }
@@ -64,14 +67,14 @@ namespace ReleaseTrackerWpf.ViewModels
         async partial void OnSelectedNewSnapshotChanged(DirectorySnapshot? value)
         {
             OnPropertyChanged(nameof(BothSnapshotsSelected));
-            
+
             // 自動スキャンが有効で、両方のスナップショットが選択された場合、自動で比較を実行
-            if (BothSnapshotsSelected)
+            if (BothSnapshotsSelected && !IsComparison)
             {
                 var settings = await _settingsRepository.GetAsync();
                 if (settings.AutoScanEnabled)
                 {
-                    _ = CompareDirectoryAsync();
+                    await CompareDirectoryAsync();
                 }
             }
         }
@@ -143,10 +146,16 @@ namespace ReleaseTrackerWpf.ViewModels
                 return;
             }
 
+            // 進捗状態をオンに設定
+            IsComparison = true;
+
             try
             {
                 // プログレス付きInfoBarを表示
                 _notificationService.ShowProgressInfoBar("処理中", "ディレクトリ構造を比較中...", 0);
+
+                // デバッグ用: 進捗ダイアログの動作を確認するために待機
+                await Task.Delay(100);
 
                 // ディレクトリ構造の比較を実行
                 var comparisonResult = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
@@ -168,6 +177,11 @@ namespace ReleaseTrackerWpf.ViewModels
             {
                 // エラーInfoBarを表示
                 _notificationService.ShowInfoBar("エラー", $"比較中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+            }
+            finally
+            {
+                // 進捗状態をオフに設定
+                IsComparison = false;
             }
         }
 
