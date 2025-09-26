@@ -45,11 +45,12 @@ namespace ReleaseTrackerWpf.ViewModels
 
             // Initialize child ViewModels
             var comparisonArgs = new ComparisonViewModelArgs(
-                args.DirectoryScanService, 
-                args.ComparisonService, 
-                args.ExportService, 
+                args.DirectoryScanService,
+                args.ComparisonService,
+                args.ExportService,
+                args.ComparisonExportService,
                 args.ImportDescriptionService,
-                args.NotificationService, 
+                args.NotificationService,
                 args.SettingsRepository,
                 args.SnapshotRepository
             );

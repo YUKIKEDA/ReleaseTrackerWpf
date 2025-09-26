@@ -213,8 +213,18 @@
     <Color x:Key="ButtonPressedBackgroundColor">#F0EAD8</Color>
     <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="{StaticResource ButtonPressedBackgroundColor}" />
 
-    <!--  Button Style with darker hover effect  -->
-    <Style x:Key="CustomButtonStyle" TargetType="ui:Button">
+    <!--  Button disabled colors for subtle appearance  -->
+    <Color x:Key="ButtonDisabledBackgroundColor">#F8F6F2</Color>
+    <SolidColorBrush x:Key="ButtonDisabledBackgroundBrush" Color="{StaticResource ButtonDisabledBackgroundColor}" />
+
+    <Color x:Key="ButtonDisabledForegroundColor">#C0B5A0</Color>
+    <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="{StaticResource ButtonDisabledForegroundColor}" />
+
+    <Color x:Key="ButtonDisabledBorderColor">#E8E2D8</Color>
+    <SolidColorBrush x:Key="ButtonDisabledBorderBrush" Color="{StaticResource ButtonDisabledBorderColor}" />
+
+    <!--  Global Button Style with custom disabled appearance  -->
+    <Style TargetType="ui:Button">
         <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
@@ -239,6 +249,7 @@
                             Margin="{TemplateBinding Padding}"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
                             RecognizesAccessKey="True"
                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </Border>
@@ -250,14 +261,21 @@
                             <Setter TargetName="BorderElement" Property="Background" Value="{StaticResource ButtonPressedBackgroundBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="BorderElement" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}" />
-                            <Setter TargetName="BorderElement" Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
+                            <Setter TargetName="BorderElement" Property="Background" Value="{StaticResource ButtonDisabledBackgroundBrush}" />
+                            <Setter TargetName="BorderElement" Property="BorderBrush" Value="{StaticResource ButtonDisabledBorderBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource ButtonDisabledForegroundBrush}" />
+                            <Setter Property="Opacity" Value="0.9" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!--  Named Button Style (keeping for backward compatibility)  -->
+    <Style
+        x:Key="CustomButtonStyle"
+        BasedOn="{StaticResource {x:Type ui:Button}}"
+        TargetType="ui:Button" />
 
 </ResourceDictionary>

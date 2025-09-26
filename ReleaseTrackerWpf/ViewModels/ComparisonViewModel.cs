@@ -15,6 +15,7 @@ namespace ReleaseTrackerWpf.ViewModels
         private readonly DirectoryScanService _directoryScanService;
         private readonly ComparisonService _comparisonService;
         private readonly ExportService _exportService;
+        private readonly ComparisonExportService _comparisonExportService;
         private readonly ImportDescriptionService _importDescriptionService;
         private readonly INotificationService _notificationService;
         private readonly ISettingsRepository _settingsRepository;
@@ -37,6 +38,10 @@ namespace ReleaseTrackerWpf.ViewModels
         [ObservableProperty]
         private bool isComparison;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasComparisonResult))]
+        private ComparisonResult? comparisonResult;
+
         #endregion
 
         #region Properties
@@ -44,6 +49,7 @@ namespace ReleaseTrackerWpf.ViewModels
         public bool HasSnapshots => AvailableSnapshots.Count > 0;
         public bool HasNoSnapshots => AvailableSnapshots.Count == 0;
         public bool BothSnapshotsSelected => SelectedOldSnapshot != null && SelectedNewSnapshot != null;
+        public bool HasComparisonResult => ComparisonResult != null;
 
         #endregion
 
@@ -86,6 +92,7 @@ namespace ReleaseTrackerWpf.ViewModels
             _directoryScanService = args.DirectoryScanService;
             _comparisonService = args.ComparisonService;
             _exportService = args.ExportService;
+            _comparisonExportService = args.ComparisonExportService;
             _importDescriptionService = args.ImportDescriptionService;
             _notificationService = args.NotificationService;
             _settingsRepository = args.SettingsRepository;
@@ -158,13 +165,14 @@ namespace ReleaseTrackerWpf.ViewModels
                 await Task.Delay(100);
 
                 // ディレクトリ構造の比較を実行
-                var comparisonResult = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
+                var result = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
+                ComparisonResult = result;
 
                 // 比較結果を表示用データに変換
-                CreateCompareResultForDisplay(comparisonResult);
+                CreateCompareResultForDisplay(result);
 
                 // 完了InfoBarを表示
-                var statistics = comparisonResult.Statistics;
+                var statistics = result.Statistics;
                 var changeCount = statistics.AddedFiles + statistics.DeletedFiles + statistics.ModifiedFiles +
                                  statistics.AddedDirectories + statistics.DeletedDirectories;
                 var message = changeCount > 0
@@ -266,6 +274,45 @@ namespace ReleaseTrackerWpf.ViewModels
             }
 
             await ImportDescriptionsForSnapshotAsync(SelectedNewSnapshot, "比較先");
+        }
+
+        [RelayCommand]
+        private async Task ExportComparisonExcelAsync()
+        {
+            if (ComparisonResult == null)
+            {
+                _notificationService.ShowInfoBar("警告", "比較結果がありません。先に比較を実行してください", InfoBarSeverity.Warning, 5);
+                return;
+            }
+
+            try
+            {
+                // ファイル保存ダイアログを表示
+                var saveDialog = new SaveFileDialog
+                {
+                    Title = "Excelファイルを保存",
+                    Filter = "Excelファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*",
+                    DefaultExt = "xlsx",
+                    FileName = $"比較結果_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // プログレス付きInfoBarを表示
+                    _notificationService.ShowProgressInfoBar("処理中", "Excelファイルをエクスポート中...", 0);
+
+                    // 色付きExcelエクスポートを実行
+                    await _comparisonExportService.ExportComparisonToColoredExcelAsync(ComparisonResult, saveDialog.FileName);
+
+                    // 完了InfoBarを表示
+                    _notificationService.ShowInfoBar("通知", "Excelファイルのエクスポートが完了しました", InfoBarSeverity.Success, 5);
+                }
+            }
+            catch (Exception ex)
+            {
+                // エラーInfoBarを表示
+                _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+            }
         }
 
         private async Task ImportDescriptionsForSnapshotAsync(DirectorySnapshot snapshot, string snapshotType)
