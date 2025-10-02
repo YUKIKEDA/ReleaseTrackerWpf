@@ -34,6 +34,15 @@ namespace ReleaseTrackerWpf.ViewModels
         [ObservableProperty]
         private bool isExpanded;
 
+        [ObservableProperty]
+        private int depth;
+
+        [ObservableProperty]
+        private string treePrefix = string.Empty;
+
+        [ObservableProperty]
+        private bool isLastChild;
+
         public ObservableCollection<FileItemViewModel> Children { get; } = new();
 
         public string DisplaySize => IsDirectory ? "Directory" : $"{Size:N0} bytes";

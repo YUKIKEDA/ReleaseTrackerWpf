@@ -1,5 +1,7 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ReleaseTrackerWpf.Views
 {
@@ -15,27 +17,48 @@ namespace ReleaseTrackerWpf.Views
             InitializeComponent();
         }
 
+        private ScrollViewer? GetScrollViewer(DependencyObject? obj)
+        {
+            if (obj == null) return null;
+
+            if (obj is ScrollViewer scrollViewer)
+                return scrollViewer;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = VisualTreeHelper.GetChild(obj, i);
+                var result = GetScrollViewer(child);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
         private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (sender is ScrollViewer scrollViewer)
+            var listView = sender as ListView;
+            if (listView == null) return;
+
+            var scrollViewer = GetScrollViewer(listView);
+            if (scrollViewer == null) return;
+
+            // Shiftキーが押されている場合は横スクロール
+            if (Keyboard.Modifiers == ModifierKeys.Shift)
             {
-                // Shiftキーが押されている場合は横スクロール
-                if (Keyboard.Modifiers == ModifierKeys.Shift)
+                if (e.Delta > 0)
                 {
-                    if (e.Delta > 0)
-                    {
-                        // 上方向のスクロール = 左スクロール
-                        scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 50);
-                    }
-                    else
-                    {
-                        // 下方向のスクロール = 右スクロール
-                        scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 50);
-                    }
-                    e.Handled = true;
+                    // 上方向のスクロール = 左スクロール
+                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - 50);
                 }
-                // Shiftキーが押されていない場合は通常の縦スクロール（デフォルト動作）
+                else
+                {
+                    // 下方向のスクロール = 右スクロール
+                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + 50);
+                }
+                e.Handled = true;
             }
+            // Shiftキーが押されていない場合は通常の縦スクロール（デフォルト動作）
         }
 
         private void LeftScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -46,8 +69,12 @@ namespace ReleaseTrackerWpf.Views
             try
             {
                 // 左側のスクロール変更を右側に同期
-                RightScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
-                RightScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+                var rightScrollViewer = GetScrollViewer(RightListView);
+                if (rightScrollViewer != null)
+                {
+                    rightScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
+                    rightScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+                }
             }
             finally
             {
@@ -63,8 +90,12 @@ namespace ReleaseTrackerWpf.Views
             try
             {
                 // 右側のスクロール変更を左側に同期
-                LeftScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
-                LeftScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+                var leftScrollViewer = GetScrollViewer(LeftListView);
+                if (leftScrollViewer != null)
+                {
+                    leftScrollViewer.ScrollToVerticalOffset(e.VerticalOffset);
+                    leftScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+                }
             }
             finally
             {

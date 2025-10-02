@@ -201,25 +201,31 @@
                         Content="説明インポート" />
                 </StackPanel>
 
-                <!--  Comparison Results TreeView (Old)  -->
-                <ScrollViewer
-                    x:Name="LeftScrollViewer"
+                <!--  Comparison Results ListView (Old)  -->
+                <ui:ListView
+                    x:Name="LeftListView"
                     Grid.Row="2"
                     Grid.Column="0"
                     Margin="0,0,5,0"
-                    HorizontalScrollBarVisibility="Auto"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    ItemsSource="{Binding OldFlattenedDirectoryStructure}"
                     PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                    ScrollChanged="LeftScrollViewer_ScrollChanged"
-                    VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TreeView
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        ItemsSource="{Binding OldDisplayedDirectoryStructure}">
-                        <TreeView.Resources>
-                            <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
-                            <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.ScrollChanged="LeftScrollViewer_ScrollChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ui:ListView.ItemTemplate>
+                            <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
                                 <StackPanel Orientation="Horizontal">
+                                    <!--  ツリー構造の罫線  -->
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="Consolas"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding TreePrefix}" />
                                     <!--  フォルダ/ファイルアイコン  -->
                                     <ui:SymbolIcon
                                         Margin="0,0,5,0"
@@ -247,16 +253,16 @@
                                         Text="{Binding DisplayDescription}"
                                         Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.Resources>
-                        <TreeView.ItemContainerStyle>
-                            <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="True" />
+                            </DataTemplate>
+                        </ui:ListView.ItemTemplate>
+                        <ui:ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
                                 <Setter Property="Padding" Value="4,2" />
                                 <Setter Property="Margin" Value="0,1" />
                                 <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
                                 <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                                 <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
@@ -280,37 +286,34 @@
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.Style>
-                            <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
-                                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
-                                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                                <Setter Property="BorderThickness" Value="1" />
-                                <Setter Property="Padding" Value="8" />
-                            </Style>
-                        </TreeView.Style>
-                    </TreeView>
-                </ScrollViewer>
+                        </ui:ListView.ItemContainerStyle>
+                </ui:ListView>
 
-                <!--  Comparison Results TreeView (New)  -->
-                <ScrollViewer
-                    x:Name="RightScrollViewer"
+                <!--  Comparison Results ListView (New)  -->
+                <ui:ListView
+                    x:Name="RightListView"
                     Grid.Row="2"
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    HorizontalScrollBarVisibility="Auto"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    ItemsSource="{Binding NewFlattenedDirectoryStructure}"
                     PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                    ScrollChanged="RightScrollViewer_ScrollChanged"
-                    VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TreeView
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        ItemsSource="{Binding NewDisplayedDirectoryStructure}">
-                        <TreeView.Resources>
-                            <!--  FileItemViewModel用のHierarchicalDataTemplate  -->
-                            <HierarchicalDataTemplate DataType="{x:Type viewmodels:FileItemViewModel}" ItemsSource="{Binding Children}">
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.ScrollChanged="RightScrollViewer_ScrollChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ui:ListView.ItemTemplate>
+                            <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
                                 <StackPanel Orientation="Horizontal">
+                                    <!--  ツリー構造の罫線  -->
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontFamily="Consolas"
+                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                        Text="{Binding TreePrefix}" />
                                     <!--  フォルダ/ファイルアイコン  -->
                                     <ui:SymbolIcon
                                         Margin="0,0,5,0"
@@ -338,16 +341,16 @@
                                         Text="{Binding DisplayDescription}"
                                         Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.Resources>
-                        <TreeView.ItemContainerStyle>
-                            <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="True" />
+                            </DataTemplate>
+                        </ui:ListView.ItemTemplate>
+                        <ui:ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
                                 <Setter Property="Padding" Value="4,2" />
                                 <Setter Property="Margin" Value="0,1" />
                                 <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
                                 <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
                                 <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
@@ -371,17 +374,8 @@
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.Style>
-                            <Style BasedOn="{StaticResource {x:Type TreeView}}" TargetType="TreeView">
-                                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
-                                <Setter Property="BorderBrush" Value="{DynamicResource ControlElevationBorderBrush}" />
-                                <Setter Property="BorderThickness" Value="1" />
-                                <Setter Property="Padding" Value="8" />
-                            </Style>
-                        </TreeView.Style>
-                    </TreeView>
-                </ScrollViewer>
+                        </ui:ListView.ItemContainerStyle>
+                </ui:ListView>
             </Grid>
         </ui:Card>
 

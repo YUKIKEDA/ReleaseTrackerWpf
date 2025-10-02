@@ -25,6 +25,7 @@
             <converters:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
             <converters:DifferenceTypeToColorConverter x:Key="DifferenceTypeToColorConverter" />
             <converters:DifferenceTypeToForegroundConverter x:Key="DifferenceTypeToForegroundConverter" />
+            <converters:DepthToMarginConverter x:Key="DepthToMarginConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

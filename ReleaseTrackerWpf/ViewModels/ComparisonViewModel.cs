@@ -27,6 +27,8 @@ namespace ReleaseTrackerWpf.ViewModels
         public ObservableCollection<DirectorySnapshot> AvailableSnapshots { get; } = [];
         public ObservableCollection<FileItemViewModel> OldDisplayedDirectoryStructure { get; } = [];
         public ObservableCollection<FileItemViewModel> NewDisplayedDirectoryStructure { get; } = [];
+        public ObservableCollection<FileItemViewModel> OldFlattenedDirectoryStructure { get; } = [];
+        public ObservableCollection<FileItemViewModel> NewFlattenedDirectoryStructure { get; } = [];
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(BothSnapshotsSelected))]
@@ -430,19 +432,86 @@ namespace ReleaseTrackerWpf.ViewModels
             // 既存の表示データをクリア
             OldDisplayedDirectoryStructure.Clear();
             NewDisplayedDirectoryStructure.Clear();
+            OldFlattenedDirectoryStructure.Clear();
+            NewFlattenedDirectoryStructure.Clear();
 
             // 左側（旧ディレクトリ構造）の表示データを作成
-            foreach (var entry in comparisonResult.LeftTreeItems)
+            for (int i = 0; i < comparisonResult.LeftTreeItems.Count; i++)
             {
+                var entry = comparisonResult.LeftTreeItems[i];
                 var viewModel = FileItemViewModel.FromModel(entry);
+                viewModel.IsLastChild = (i == comparisonResult.LeftTreeItems.Count - 1);
                 OldDisplayedDirectoryStructure.Add(viewModel);
+                FlattenTreeStructure(viewModel, OldFlattenedDirectoryStructure, 0, new List<bool>());
             }
 
             // 右側（新ディレクトリ構造）の表示データを作成
-            foreach (var entry in comparisonResult.RightTreeItems)
+            for (int i = 0; i < comparisonResult.RightTreeItems.Count; i++)
             {
+                var entry = comparisonResult.RightTreeItems[i];
                 var viewModel = FileItemViewModel.FromModel(entry);
+                viewModel.IsLastChild = (i == comparisonResult.RightTreeItems.Count - 1);
                 NewDisplayedDirectoryStructure.Add(viewModel);
+                FlattenTreeStructure(viewModel, NewFlattenedDirectoryStructure, 0, new List<bool>());
+            }
+        }
+
+        /// <summary>
+        /// ツリー構造をフラットなリストに変換します
+        /// </summary>
+        /// <param name="item">現在のアイテム</param>
+        /// <param name="flatList">フラットリスト</param>
+        /// <param name="depth">深さ</param>
+        /// <param name="parentIsLastChild">各深さレベルで親が最後の子かどうかのリスト</param>
+        private void FlattenTreeStructure(FileItemViewModel item, ObservableCollection<FileItemViewModel> flatList, int depth, List<bool> parentIsLastChild)
+        {
+            item.Depth = depth;
+
+            // TreePrefixを構築
+            var prefix = new System.Text.StringBuilder();
+
+            // 各祖先レベルの線を追加
+            for (int i = 0; i < parentIsLastChild.Count; i++)
+            {
+                if (parentIsLastChild[i])
+                {
+                    prefix.Append("  "); // 親が最後の子だった場合はスペース
+                }
+                else
+                {
+                    prefix.Append("│ "); // 親がまだ続いている場合は縦線
+                }
+            }
+
+            // 自分の位置を示す線を追加
+            if (depth > 0)
+            {
+                if (item.IsLastChild)
+                {
+                    prefix.Append("└─");
+                }
+                else
+                {
+                    prefix.Append("├─");
+                }
+            }
+
+            item.TreePrefix = prefix.ToString();
+            flatList.Add(item);
+
+            // 子要素を処理
+            for (int i = 0; i < item.Children.Count; i++)
+            {
+                var child = item.Children[i];
+                child.IsLastChild = (i == item.Children.Count - 1);
+
+                var newParentIsLastChild = new List<bool>(parentIsLastChild);
+                if (depth > 0)
+                {
+                    newParentIsLastChild.Add(item.IsLastChild);
+                }
+
+                FlattenTreeStructure(child, flatList, depth + 1, newParentIsLastChild);
             }
         }
 
