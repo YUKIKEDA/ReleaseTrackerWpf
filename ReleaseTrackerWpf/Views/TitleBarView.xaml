@@ -5,16 +5,72 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:behaviors="clr-namespace:ReleaseTrackerWpf.Behaviors"
     mc:Ignorable="d">
 
-    <ui:TitleBar
-        Title="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
+    <Grid 
+        x:Name="TitleBar"
         Height="28"
-        Background="{StaticResource TitleBarBackgroundBrush}"
-        FontSize="14"
-        FontWeight="Bold">
-        <ui:TitleBar.Icon>
-            <ui:SymbolIcon FontSize="18" Symbol="Home16" />
-        </ui:TitleBar.Icon>
-    </ui:TitleBar>
+        Background="{StaticResource TitleBarBackgroundBrush}">
+        <i:Interaction.Behaviors>
+            <behaviors:WindowDragBehavior />
+        </i:Interaction.Behaviors>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        
+        <!-- アイコン -->
+        <ui:SymbolIcon 
+            Grid.Column="0"
+            FontSize="18" 
+            Symbol="Home16" 
+            VerticalAlignment="Center" 
+            Margin="10,0,0,0" />
+        
+        <!-- タイトル -->
+        <TextBlock 
+            Grid.Column="1"
+            Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            FontSize="14"
+            FontWeight="Bold"
+            VerticalAlignment="Center"
+            Margin="10,0,0,0" />
+        
+        <!-- ウィンドウボタン -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <Button 
+                x:Name="MinimizeButton"
+                Width="46" 
+                Height="28" 
+                Style="{StaticResource TitleBarButtonStyle}">
+                <i:Interaction.Behaviors>
+                    <behaviors:WindowMinimizeBehavior />
+                </i:Interaction.Behaviors>
+                <ui:SymbolIcon Symbol="Subtract16" FontSize="16" />
+            </Button>
+            <Button 
+                x:Name="MaximizeButton"
+                Width="46" 
+                Height="28" 
+                Style="{StaticResource TitleBarButtonStyle}">
+                <i:Interaction.Behaviors>
+                    <behaviors:WindowMaximizeBehavior />
+                </i:Interaction.Behaviors>
+                <ui:SymbolIcon Symbol="Square16" FontSize="16" />
+            </Button>
+            <Button 
+                x:Name="CloseButton"
+                Width="46" 
+                Height="28" 
+                Style="{StaticResource TitleBarButtonStyle}">
+                <i:Interaction.Behaviors>
+                    <behaviors:WindowCloseBehavior />
+                </i:Interaction.Behaviors>
+                <ui:SymbolIcon Symbol="Dismiss16" FontSize="16" />
+            </Button>
+        </StackPanel>
+    </Grid>
 </UserControl>
