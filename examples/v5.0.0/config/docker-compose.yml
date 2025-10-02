@@ -1,0 +1,11 @@
+﻿name: example-config
+version: 1.0.0
+description: Configuration file
+settings:
+  database:
+    host: localhost
+    port: 5432
+    name: example_db
+  api:
+    baseUrl: https://api.example.com
+    timeout: 30000
