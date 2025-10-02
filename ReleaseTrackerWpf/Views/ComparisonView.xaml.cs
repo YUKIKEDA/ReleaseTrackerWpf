@@ -17,6 +17,12 @@ namespace ReleaseTrackerWpf.Views
             InitializeComponent();
         }
 
+        private void ComboBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // ComboBoxのマウスホイールによる選択変更を無効化
+            e.Handled = true;
+        }
+
         private ScrollViewer? GetScrollViewer(DependencyObject? obj)
         {
             if (obj == null) return null;

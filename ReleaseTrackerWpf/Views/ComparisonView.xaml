@@ -57,6 +57,7 @@
                     <ComboBox
                         Margin="0,0,0,10"
                         ItemsSource="{Binding AvailableSnapshots}"
+                        PreviewMouseWheel="ComboBox_PreviewMouseWheel"
                         SelectedItem="{Binding SelectedOldSnapshot}"
                         Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ComboBox.ItemTemplate>
@@ -91,6 +92,7 @@
                     <ComboBox
                         Margin="0,0,0,10"
                         ItemsSource="{Binding AvailableSnapshots}"
+                        PreviewMouseWheel="ComboBox_PreviewMouseWheel"
                         SelectedItem="{Binding SelectedNewSnapshot}"
                         Visibility="{Binding HasSnapshots, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ComboBox.ItemTemplate>
