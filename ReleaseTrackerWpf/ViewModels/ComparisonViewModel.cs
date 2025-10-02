@@ -40,6 +40,9 @@ namespace ReleaseTrackerWpf.ViewModels
         private bool isComparison;
 
         [ObservableProperty]
+        private string progressMessage = "処理中...";
+
+        [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HasComparisonResult))]
         private ComparisonResult? comparisonResult;
 
@@ -119,11 +122,12 @@ namespace ReleaseTrackerWpf.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
+                // 進捗状態をオンに設定
+                ProgressMessage = "スナップショットを作成中...";
+                IsComparison = true;
+
                 try
                 {                
-                    // プログレス付きInfoBarを表示
-                    _notificationService.ShowProgressInfoBar("処理中", "スナップショットを作成中...", 0);
-
                     var settings = await _settingsRepository.GetAsync();
                     var snapshot = await _directoryScanService.ScanDirectoryAsync(dialog.FolderName);
                     var fileName = string.Format(DirectorySnapshot.SnapshotFileNameFormat, DateTime.Now);
@@ -141,6 +145,11 @@ namespace ReleaseTrackerWpf.ViewModels
                     // エラーInfoBarを表示
                     _notificationService.ShowInfoBar("エラー", $"スナップショット作成中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
                 }
+                finally
+                {
+                    // 進捗状態をオフに設定
+                    IsComparison = false;
+                }
             }
         }
 
@@ -155,13 +164,11 @@ namespace ReleaseTrackerWpf.ViewModels
             }
 
             // 進捗状態をオンに設定
+            ProgressMessage = "ディレクトリ構造を比較中...";
             IsComparison = true;
 
             try
             {
-                // プログレス付きInfoBarを表示
-                _notificationService.ShowProgressInfoBar("処理中", "ディレクトリ構造を比較中...", 0);
-
                 // ディレクトリ構造の比較を実行
                 var result = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
                 ComparisonResult = result;
@@ -220,22 +227,23 @@ namespace ReleaseTrackerWpf.ViewModels
 
         private async Task ExportSingleSnapshotAsync(DirectorySnapshot snapshot)
         {
-            try
+            // ファイル保存ダイアログを表示
+            var saveDialog = new SaveFileDialog
             {
-                // ファイル保存ダイアログを表示
-                var saveDialog = new SaveFileDialog
-                {
-                    Title = "CSVファイルを保存",
-                    Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
-                    DefaultExt = "csv",
-                    FileName = $"スナップショット_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
-                };
+                Title = "CSVファイルを保存",
+                Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
+                DefaultExt = "csv",
+                FileName = $"スナップショット_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+            };
 
-                if (saveDialog.ShowDialog() == true)
-                {
-                    // プログレス付きInfoBarを表示
-                    _notificationService.ShowProgressInfoBar("処理中", "CSVファイルをエクスポート中...", 0);
+            if (saveDialog.ShowDialog() == true)
+            {
+                // 進捗状態をオンに設定
+                ProgressMessage = "CSVファイルをエクスポート中...";
+                IsComparison = true;
 
+                try
+                {
                     // 設定を取得してパス表示形式を決定
                     var settings = await _settingsRepository.GetAsync();
                     
@@ -245,11 +253,16 @@ namespace ReleaseTrackerWpf.ViewModels
                     // 完了InfoBarを表示
                     _notificationService.ShowInfoBar("通知", "CSVファイルのエクスポートが完了しました", InfoBarSeverity.Success, 5);
                 }
-            }
-            catch (Exception ex)
-            {
-                // エラーInfoBarを表示
-                _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                catch (Exception ex)
+                {
+                    // エラーInfoBarを表示
+                    _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                }
+                finally
+                {
+                    // 進捗状態をオフに設定
+                    IsComparison = false;
+                }
             }
         }
 
@@ -286,53 +299,60 @@ namespace ReleaseTrackerWpf.ViewModels
                 return;
             }
 
-            try
+            // ファイル保存ダイアログを表示
+            var saveDialog = new SaveFileDialog
             {
-                // ファイル保存ダイアログを表示
-                var saveDialog = new SaveFileDialog
-                {
-                    Title = "Excelファイルを保存",
-                    Filter = "Excelファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*",
-                    DefaultExt = "xlsx",
-                    FileName = $"比較結果_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
-                };
+                Title = "Excelファイルを保存",
+                Filter = "Excelファイル (*.xlsx)|*.xlsx|すべてのファイル (*.*)|*.*",
+                DefaultExt = "xlsx",
+                FileName = $"比較結果_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+            };
 
-                if (saveDialog.ShowDialog() == true)
-                {
-                    // プログレス付きInfoBarを表示
-                    _notificationService.ShowProgressInfoBar("処理中", "Excelファイルをエクスポート中...", 0);
+            if (saveDialog.ShowDialog() == true)
+            {
+                // 進捗状態をオンに設定
+                ProgressMessage = "Excelファイルをエクスポート中...";
+                IsComparison = true;
 
+                try
+                {
                     // 色付きExcelエクスポートを実行
                     await _comparisonExportService.ExportComparisonToColoredExcelAsync(ComparisonResult, saveDialog.FileName);
 
                     // 完了InfoBarを表示
                     _notificationService.ShowInfoBar("通知", "Excelファイルのエクスポートが完了しました", InfoBarSeverity.Success, 5);
                 }
-            }
-            catch (Exception ex)
-            {
-                // エラーInfoBarを表示
-                _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                catch (Exception ex)
+                {
+                    // エラーInfoBarを表示
+                    _notificationService.ShowInfoBar("エラー", $"エクスポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                }
+                finally
+                {
+                    // 進捗状態をオフに設定
+                    IsComparison = false;
+                }
             }
         }
 
         private async Task ImportDescriptionsForSnapshotAsync(DirectorySnapshot snapshot, string snapshotType)
         {
-            try
+            // ファイル選択ダイアログを表示
+            var openDialog = new OpenFileDialog
             {
-                // ファイル選択ダイアログを表示
-                var openDialog = new OpenFileDialog
-                {
-                    Title = $"{snapshotType}用の説明が追加されたCSVファイルを選択",
-                    Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
-                    DefaultExt = "csv"
-                };
+                Title = $"{snapshotType}用の説明が追加されたCSVファイルを選択",
+                Filter = "CSVファイル (*.csv)|*.csv|すべてのファイル (*.*)|*.*",
+                DefaultExt = "csv"
+            };
 
-                if (openDialog.ShowDialog() == true)
-                {
-                    // プログレス付きInfoBarを表示
-                    _notificationService.ShowProgressInfoBar("処理中", "CSVファイルから説明をインポート中...", 0);
+            if (openDialog.ShowDialog() == true)
+            {
+                // 進捗状態をオンに設定
+                ProgressMessage = "CSVファイルから説明をインポート中...";
+                IsComparison = true;
 
+                try
+                {
                     // CSVファイルから説明をインポート
                     var descriptions = await _importDescriptionService.ImportDescriptionsFromCsvAsync(openDialog.FileName);
 
@@ -353,11 +373,16 @@ namespace ReleaseTrackerWpf.ViewModels
 
                     _notificationService.ShowInfoBar("通知", message, InfoBarSeverity.Success, 5);
                 }
-            }
-            catch (Exception ex)
-            {
-                // エラーInfoBarを表示
-                _notificationService.ShowInfoBar("エラー", $"インポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                catch (Exception ex)
+                {
+                    // エラーInfoBarを表示
+                    _notificationService.ShowInfoBar("エラー", $"インポート中にエラーが発生しました: {ex.Message}", InfoBarSeverity.Error, 0);
+                }
+                finally
+                {
+                    // 進捗状態をオフに設定
+                    IsComparison = false;
+                }
             }
         }
 

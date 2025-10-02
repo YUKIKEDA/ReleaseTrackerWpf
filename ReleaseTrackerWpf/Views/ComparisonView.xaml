@@ -405,7 +405,7 @@
                         HorizontalAlignment="Center"
                         FontSize="16"
                         FontWeight="SemiBold"
-                        Text="比較処理中..." />
+                        Text="{Binding ProgressMessage}" />
                     <TextBlock
                         Margin="0,5,0,0"
                         HorizontalAlignment="Center"
