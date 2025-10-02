@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -161,12 +162,12 @@ namespace ReleaseTrackerWpf.ViewModels
                 // プログレス付きInfoBarを表示
                 _notificationService.ShowProgressInfoBar("処理中", "ディレクトリ構造を比較中...", 0);
 
-                // デバッグ用: 進捗ダイアログの動作を確認するために待機
-                await Task.Delay(100);
-
                 // ディレクトリ構造の比較を実行
                 var result = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
                 ComparisonResult = result;
+
+                // UIの更新を確実に完了させる
+                await Dispatcher.CurrentDispatcher.InvokeAsync(() => { }, DispatcherPriority.Render);
 
                 // 比較結果を表示用データに変換
                 CreateCompareResultForDisplay(result);
@@ -174,7 +175,7 @@ namespace ReleaseTrackerWpf.ViewModels
                 // 完了InfoBarを表示
                 var statistics = result.Statistics;
                 var changeCount = statistics.AddedFiles + statistics.DeletedFiles + statistics.ModifiedFiles +
-                                 statistics.AddedDirectories + statistics.DeletedDirectories;
+                                statistics.AddedDirectories + statistics.DeletedDirectories;
                 var message = changeCount > 0
                     ? $"比較が完了しました（{changeCount}個の変更を検出）"
                     : "比較が完了しました（変更はありませんでした）";
