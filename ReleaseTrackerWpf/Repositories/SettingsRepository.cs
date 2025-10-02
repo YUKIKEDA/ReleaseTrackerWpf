@@ -7,15 +7,18 @@ namespace ReleaseTrackerWpf.Repositories
     public class SettingsRepository : ISettingsRepository
     {
         public const string SettingsDirectoryName = "ReleaseTracker";
+        public const string SnapshotsDirectoryName = "Snapshots";
         public const string SettingsFileName = "settings.json";
 
         private static readonly string _appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         private static readonly string _settingsDirectoryPath = Path.Combine(_appDataPath, SettingsDirectoryName);
+        private static readonly string _snapshotsDirectoryPath = Path.Combine(_settingsDirectoryPath, SnapshotsDirectoryName);
         private static readonly string _settingsFilePath = Path.Combine(_settingsDirectoryPath, SettingsFileName);
 
         public SettingsRepository()
         {
             Directory.CreateDirectory(_settingsDirectoryPath);
+            Directory.CreateDirectory(_snapshotsDirectoryPath);
         }
 
         public async Task<SettingsData> GetAsync()
@@ -55,7 +58,7 @@ namespace ReleaseTrackerWpf.Repositories
         private static SettingsData GetDefaultSettings()
         {
             return new SettingsData(
-                SnapshotsDirectory: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReleaseTracker", "Snapshots"),
+                SnapshotsDirectory: Path.Combine(_appDataPath, SettingsDirectoryName, SnapshotsDirectoryName),
                 AutoScanEnabled: true
             );
         }
