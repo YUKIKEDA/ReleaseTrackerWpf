@@ -140,4 +140,30 @@ v3.0.0からのマイクロサービスアーキテクチャへの移行：
   - `metrics/prometheus/collectors/custom/`: カスタムメトリクス
   - `tracing/jaeger/span-processors/user-activity/`: 分散トレーシング
 
-このサンプル構造により、ReleaseTrackerWpfの比較機能を包括的にテストできます。
+### v6.0.0（新規）
+バイナリ比較検証用の最小データセット：
+- **data/**
+  - `binary_same_size_diff_content.bin`: 256バイト。同名・同サイズ（v7 と一致）だが内容が異なる。
+  - `binary_same_size_same_content.bin`: 128バイト。v7 と同一内容。
+  - `deleted_in_v7_only.bin`: v7 では削除されるファイル。
+
+### v7.0.0（新規）
+バイナリ比較検証用の最小データセット：
+- **data/**
+  - `binary_same_size_diff_content.bin`: 256バイト。v6 と同サイズだが内容が異なる（変更検出対象）。
+  - `binary_same_size_same_content.bin`: 128バイト。v6 と同一内容（未変更）。
+  - `added_only_in_v7.bin`: v6 には存在しない追加ファイル。
+
+## バイナリ比較の検証手順（v6.0.0 ↔ v7.0.0）
+1. アプリで `examples/v6.0.0` をスキャンしてスナップショット保存。
+2. アプリで `examples/v7.0.0` をスキャンしてスナップショット保存。
+3. 比較画面で v6 → v7 を選択し比較を実行。
+4. 設定に「バイナリ比較（ハッシュ使用）」を有効にして再比較。
+
+期待される結果：
+- `binary_same_size_diff_content.bin` は「変更」と判定（サイズは同じ、内容のみ異なる）。
+- `binary_same_size_same_content.bin` は「未変更」。
+- `deleted_in_v7_only.bin` は「削除」。
+- `added_only_in_v7.bin` は「追加」。
+
+このサンプル構造により、ReleaseTrackerWpfの比較機能（特にハッシュによるバイナリ比較）を簡単に検証できます。
