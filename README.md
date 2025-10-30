@@ -59,6 +59,25 @@ dotnet run --project ReleaseTrackerWpf/ReleaseTrackerWpf.csproj
 2. 「スキャン実行」ボタンをクリック（自動スキャンが有効な場合は自動実行）
 3. 左右2カラムで結果が表示されます
 
+#### 比較ロジック（バイナリ比較 ON/OFF）
+- **バイナリ比較 OFF（既定）**
+  - **使用情報**: `Size`（ファイルサイズ）, `LastWriteTime`（最終更新時刻）
+  - **判定**:
+    - `Size` または `LastWriteTime` に差があれば → 変更（Modified）
+    - 両方同一なら → 未変更（Unchanged）
+
+- **バイナリ比較 ON（ハッシュ使用）**
+  - **優先使用情報**: `FileHash`（SHA-256）
+    - 両スナップショットで `FileHash` が取得できている場合 → ハッシュ一致/不一致で判定
+      - ハッシュ一致 → 未変更（Unchanged）
+      - ハッシュ不一致 → 変更（Modified）
+  - **フォールバック**: `FileHash` のいずれかが取得できない場合（例: アクセス不可/ロックなど）
+    - バイナリ比較 OFF と同じメタデータ比較（`Size` と `LastWriteTime`）で判定
+
+- **補足**
+  - ハッシュはスキャン時に計算され、`FileHash` に保存されます。取得失敗時は `null` となり、上記フォールバックが適用されます。
+  - ディレクトリは型（ファイル/ディレクトリ）の差異がある場合に変更（Modified）として扱われます。
+
 ### 4. 比較結果の確認
 
 #### 差分の色分け表示
@@ -107,6 +126,8 @@ dotnet run --project ReleaseTrackerWpf/ReleaseTrackerWpf.csproj
 - `examples/v2.0.0/` - アーキテクチャ変更版
 - `examples/v3.0.0/` - レイヤードアーキテクチャ版
 - `examples/v4.0.0/` - マイクロサービス版
+- `examples/v6.0.0/` - バイナリ比較検証用（v7 と対）
+- `examples/v7.0.0/` - バイナリ比較検証用（v6 と対）
 
 ### 練習手順
 1. `examples/v1.0.0`フォルダのスナップショットを作成
@@ -117,6 +138,18 @@ dotnet run --project ReleaseTrackerWpf/ReleaseTrackerWpf.csproj
 - 📁 `logger.cs`の追加
 - 📝 `main.cs`の変更
 - ⚙️ 設定ファイルの更新
+
+### バイナリ比較の練習（v6.0.0 ↔ v7.0.0）
+1. `examples/v6.0.0` フォルダのスナップショットを作成
+2. `examples/v7.0.0` フォルダのスナップショットを作成
+3. 比較画面で v6 → v7 を選択して比較を実行
+4. 設定の「バイナリ比較（ハッシュ使用）」を有効にして再比較
+
+期待される結果：
+- 変更（🟡）: `data/binary_same_size_diff_content.bin`（同名・同サイズだが内容が異なる）
+- 未変更（⚪）: `data/binary_same_size_same_content.bin`（内容も同一）
+- 追加（🟢）: `data/added_only_in_v7.bin`
+- 削除（🔴）: `data/deleted_in_v7_only.bin`
 
 ## トラブルシューティング
 
