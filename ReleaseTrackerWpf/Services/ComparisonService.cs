@@ -5,7 +5,7 @@ namespace ReleaseTrackerWpf.Services
 {
     public class ComparisonService
     {
-        public async Task<ComparisonResult> CompareAsync(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot)
+        public async Task<ComparisonResult> CompareAsync(DirectorySnapshot oldSnapshot, DirectorySnapshot newSnapshot, bool useBinaryComparison = false)
         {
             return await Task.Run(() =>
             {
@@ -25,7 +25,7 @@ namespace ReleaseTrackerWpf.Services
                 var newItems = newSnapshot.Items;
 
                 // Compare all items at each level
-                CompareItemLists(oldItems, newItems, leftTree, rightTree, statistics);
+                CompareItemLists(oldItems, newItems, leftTree, rightTree, statistics, oldSnapshot.RootPath, newSnapshot.RootPath, useBinaryComparison);
 
                 result.LeftTreeItems = leftTree;
                 result.RightTreeItems = rightTree;
@@ -37,7 +37,7 @@ namespace ReleaseTrackerWpf.Services
 
         private void CompareItemLists(List<FileSystemEntry> oldItems, List<FileSystemEntry> newItems,
             ObservableCollection<FileSystemEntry> leftTree, ObservableCollection<FileSystemEntry> rightTree,
-            ComparisonStatistics statistics)
+            ComparisonStatistics statistics, string oldRootPath, string newRootPath, bool useBinaryComparison)
         {
             // Get all unique item names from both lists
             var allItemNames = oldItems.Select(i => i.Name)
@@ -50,7 +50,7 @@ namespace ReleaseTrackerWpf.Services
                 var oldItem = oldItems.FirstOrDefault(i => i.Name == itemName);
                 var newItem = newItems.FirstOrDefault(i => i.Name == itemName);
 
-                var (leftItem, rightItem) = CompareItem(oldItem, newItem, statistics);
+                var (leftItem, rightItem) = CompareItem(oldItem, newItem, statistics, oldRootPath, newRootPath, useBinaryComparison);
 
                 if (leftItem != null)
                     leftTree.Add(leftItem);
@@ -61,10 +61,10 @@ namespace ReleaseTrackerWpf.Services
         }
 
         private (FileSystemEntry? leftEntry, FileSystemEntry? rightEntry) CompareItem(
-            FileSystemEntry? oldItem, FileSystemEntry? newItem, ComparisonStatistics statistics)
+            FileSystemEntry? oldItem, FileSystemEntry? newItem, ComparisonStatistics statistics, string oldRootPath, string newRootPath, bool useBinaryComparison)
         {
             // Determine the difference type
-            var differenceType = DetermineDifferenceType(oldItem, newItem);
+            var differenceType = DetermineDifferenceType(oldItem, newItem, oldRootPath, newRootPath, useBinaryComparison);
 
             // Create display entries for left and right sides
             var leftEntry = CreateDisplayEntry(oldItem, newItem, differenceType, isLeftSide: true);
@@ -82,7 +82,7 @@ namespace ReleaseTrackerWpf.Services
                 var leftChildTree = new ObservableCollection<FileSystemEntry>();
                 var rightChildTree = new ObservableCollection<FileSystemEntry>();
 
-                CompareItemLists(oldChildren, newChildren, leftChildTree, rightChildTree, statistics);
+                CompareItemLists(oldChildren, newChildren, leftChildTree, rightChildTree, statistics, oldRootPath, newRootPath, useBinaryComparison);
 
                 // Convert ObservableCollection to List for FileSystemEntry.Children
                 if (leftEntry != null)
@@ -95,7 +95,7 @@ namespace ReleaseTrackerWpf.Services
             return (leftEntry, rightEntry);
         }
 
-        private DifferenceType DetermineDifferenceType(FileSystemEntry? oldEntry, FileSystemEntry? newEntry)
+        private static DifferenceType DetermineDifferenceType(FileSystemEntry? oldEntry, FileSystemEntry? newEntry, string oldRootPath, string newRootPath, bool useBinaryComparison)
         {
             if (oldEntry == null && newEntry != null)
                 return DifferenceType.Added;
@@ -110,6 +110,25 @@ namespace ReleaseTrackerWpf.Services
                 {
                     if (!oldEntry.IsDirectory)
                     {
+                        // For files, check if they are the same
+                        if (useBinaryComparison)
+                        {
+                            // Compare by hash if both entries have hash values
+                            if (!string.IsNullOrEmpty(oldEntry.FileHash) && !string.IsNullOrEmpty(newEntry.FileHash))
+                            {
+                                if (oldEntry.FileHash == newEntry.FileHash)
+                                {
+                                    return DifferenceType.Unchanged;
+                                }
+                                else
+                                {
+                                    return DifferenceType.Modified;
+                                }
+                            }
+                            // If one or both entries don't have hash values, fall back to metadata comparison
+                        }
+
+                        // Metadata-based comparison (size and last write time)
                         if (oldEntry.Size != newEntry.Size ||
                             oldEntry.LastWriteTime != newEntry.LastWriteTime)
                         {
@@ -190,6 +209,7 @@ namespace ReleaseTrackerWpf.Services
                 IsDirectory = source.IsDirectory,
                 Size = source.Size,
                 LastWriteTime = source.LastWriteTime,
+                FileHash = source.FileHash,
                 DifferenceType = source.DifferenceType,
                 Description = source.Description,
                 Children = new List<FileSystemEntry>()

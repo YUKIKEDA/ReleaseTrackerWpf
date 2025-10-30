@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using ReleaseTrackerWpf.Models;
 
 namespace ReleaseTrackerWpf.Services
@@ -61,7 +62,8 @@ namespace ReleaseTrackerWpf.Services
                         RelativePath = Path.GetRelativePath(rootPath, fileInfo.FullName),
                         IsDirectory = false,
                         Size = fileInfo.Length,
-                        LastWriteTime = fileInfo.LastWriteTime
+                        LastWriteTime = fileInfo.LastWriteTime,
+                        FileHash = CalculateFileHash(file)
                     };
                     items.Add(item);
                 }
@@ -76,6 +78,27 @@ namespace ReleaseTrackerWpf.Services
             }
 
             return items;
+        }
+
+        /// <summary>
+        /// ファイルのSHA-256ハッシュを計算します。
+        /// </summary>
+        /// <param name="filePath">ファイルパス</param>
+        /// <returns>SHA-256ハッシュ</returns>
+        private static string? CalculateFileHash(string filePath)
+        {
+            try
+            {
+                using var sha256 = SHA256.Create();
+                using var fileStream = File.OpenRead(filePath);
+                var hashBytes = sha256.ComputeHash(fileStream);
+                return Convert.ToHexString(hashBytes);
+            }
+            catch
+            {
+                // If hash calculation fails (e.g., file is locked), return null
+                return null;
+            }
         }
     }
 }

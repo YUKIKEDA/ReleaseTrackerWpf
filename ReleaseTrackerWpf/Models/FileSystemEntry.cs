@@ -10,6 +10,7 @@ namespace ReleaseTrackerWpf.Models
         public bool IsDirectory { get; set; }
         public long Size { get; set; }
         public DateTime LastWriteTime { get; set; }
+        public string? FileHash { get; set; }
         public List<FileSystemEntry> Children { get; set; } = [];
 
         [JsonIgnore]

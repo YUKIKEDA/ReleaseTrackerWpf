@@ -2,10 +2,8 @@
     x:Class="ReleaseTrackerWpf.Views.ComparisonView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:ReleaseTrackerWpf.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:ReleaseTrackerWpf.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewmodels="clr-namespace:ReleaseTrackerWpf.ViewModels"
     d:DataContext="{d:DesignInstance Type=viewmodels:ComparisonViewModel}"
@@ -164,10 +162,15 @@
                             Command="{Binding CompareDirectoryCommand}"
                             Content="スキャン実行" />
                         <ui:Button
-                            Margin="5,0,0,0"
+                            Margin="5,0,5,0"
                             Command="{Binding ExportComparisonExcelCommand}"
                             Content="比較結果 エクスポート"
                             IsEnabled="{Binding HasComparisonResult}" />
+                        <CheckBox
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Content="バイナリ比較を使用"
+                            IsChecked="{Binding UseBinaryComparison}" />
                     </StackPanel>
                 </StackPanel>
 
@@ -216,79 +219,79 @@
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                     ScrollViewer.ScrollChanged="LeftScrollViewer_ScrollChanged"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
                     VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ui:ListView.ItemTemplate>
-                            <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
-                                <StackPanel Orientation="Horizontal">
-                                    <!--  ツリー構造の罫線  -->
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontFamily="Consolas"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding TreePrefix}" />
-                                    <!--  フォルダ/ファイルアイコン  -->
-                                    <ui:SymbolIcon
-                                        Margin="0,0,5,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="14"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding Name}" />
-                                    <TextBlock
-                                        Margin="10,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                        Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
-                                    <!--  説明文の表示  -->
-                                    <TextBlock
-                                        Margin="5,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding DisplayDescription}"
-                                        Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ui:ListView.ItemTemplate>
-                        <ui:ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="Padding" Value="4,2" />
-                                <Setter Property="Margin" Value="0,1" />
-                                <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
-                                <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Style.Triggers>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding IsDirectory}" Value="True" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </MultiDataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding IsDirectory}" Value="False" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </MultiDataTrigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ui:ListView.ItemContainerStyle>
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ui:ListView.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
+                            <StackPanel Orientation="Horizontal">
+                                <!--  ツリー構造の罫線  -->
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding TreePrefix}" />
+                                <!--  フォルダ/ファイルアイコン  -->
+                                <ui:SymbolIcon
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
+                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                <!--  説明文の表示  -->
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding DisplayDescription}"
+                                    Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ui:ListView.ItemTemplate>
+                    <ui:ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="4,2" />
+                            <Setter Property="Margin" Value="0,1" />
+                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
+                            <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=left}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:ListView.ItemContainerStyle>
                 </ui:ListView>
 
                 <!--  Comparison Results ListView (New)  -->
@@ -304,79 +307,79 @@
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                     ScrollViewer.ScrollChanged="RightScrollViewer_ScrollChanged"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}"
                     VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ui:ListView.ItemTemplate>
-                            <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
-                                <StackPanel Orientation="Horizontal">
-                                    <!--  ツリー構造の罫線  -->
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontFamily="Consolas"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding TreePrefix}" />
-                                    <!--  フォルダ/ファイルアイコン  -->
-                                    <ui:SymbolIcon
-                                        Margin="0,0,5,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="14"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding Name}" />
-                                    <TextBlock
-                                        Margin="10,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
-                                        Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
-                                    <!--  説明文の表示  -->
-                                    <TextBlock
-                                        Margin="5,0,0,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
-                                        Text="{Binding DisplayDescription}"
-                                        Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ui:ListView.ItemTemplate>
-                        <ui:ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="Padding" Value="4,2" />
-                                <Setter Property="Margin" Value="0,1" />
-                                <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
-                                <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Style.Triggers>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding IsDirectory}" Value="True" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </MultiDataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
-                                            <Condition Binding="{Binding IsDirectory}" Value="False" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </MultiDataTrigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
-                                        <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ui:ListView.ItemContainerStyle>
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Visibility="{Binding BothSnapshotsSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ui:ListView.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewmodels:FileItemViewModel}">
+                            <StackPanel Orientation="Horizontal">
+                                <!--  ツリー構造の罫線  -->
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding TreePrefix}" />
+                                <!--  フォルダ/ファイルアイコン  -->
+                                <ui:SymbolIcon
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="14"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Symbol="{Binding IsDirectory, Converter={StaticResource FolderFileIconConverter}}" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding Name}" />
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding Size, StringFormat='({0:N0} bytes)'}"
+                                    Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                                <!--  説明文の表示  -->
+                                <TextBlock
+                                    Margin="5,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToForegroundConverter}}"
+                                    Text="{Binding DisplayDescription}"
+                                    Visibility="{Binding DisplayDescription, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ui:ListView.ItemTemplate>
+                    <ui:ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="4,2" />
+                            <Setter Property="Margin" Value="0,1" />
+                            <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
+                            <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                                        <Condition Binding="{Binding IsDirectory}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right hover}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </MultiDataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{Binding DifferenceType, Converter={StaticResource DifferenceTypeToColorConverter}, ConverterParameter=right}" />
+                                    <Setter Property="Foreground" Value="{StaticResource TreeViewItemForeground}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:ListView.ItemContainerStyle>
                 </ui:ListView>
             </Grid>
         </ui:Card>

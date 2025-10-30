@@ -48,6 +48,9 @@ namespace ReleaseTrackerWpf.ViewModels
         [NotifyPropertyChangedFor(nameof(HasComparisonResult))]
         private ComparisonResult? comparisonResult;
 
+        [ObservableProperty]
+        private bool useBinaryComparison;
+
         #endregion
 
         #region Properties
@@ -172,7 +175,7 @@ namespace ReleaseTrackerWpf.ViewModels
             try
             {
                 // ディレクトリ構造の比較を実行
-                var result = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot);
+                var result = await _comparisonService.CompareAsync(SelectedOldSnapshot, SelectedNewSnapshot, UseBinaryComparison);
                 ComparisonResult = result;
 
                 // UIの更新を確実に完了させる
@@ -463,7 +466,7 @@ namespace ReleaseTrackerWpf.ViewModels
         /// <param name="flatList">フラットリスト</param>
         /// <param name="depth">深さ</param>
         /// <param name="parentIsLastChild">各深さレベルで親が最後の子かどうかのリスト</param>
-        private void FlattenTreeStructure(FileItemViewModel item, ObservableCollection<FileItemViewModel> flatList, int depth, List<bool> parentIsLastChild)
+        private static void FlattenTreeStructure(FileItemViewModel item, ObservableCollection<FileItemViewModel> flatList, int depth, List<bool> parentIsLastChild)
         {
             item.Depth = depth;
 
